@@ -16,7 +16,7 @@ export const auth0Config = {
 	authorizationParams: {
 		redirect_uri: `${window.location.origin}/callback`,
 		audience: import.meta.env.VITE_AUTH0_AUDIENCE,
-		scope: 'openid profile email',
+		scope: 'openid profile email hub:read hub:edit',
 	},
 };
 

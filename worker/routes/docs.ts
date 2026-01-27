@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { authMiddleware, AuthUser } from '../middleware/auth';
-import { adminMiddleware } from '../middleware/admin';
+import { adminMiddleware, readerMiddleware } from '../middleware/admin';
 
 interface Variables {
 	user: AuthUser;
@@ -10,11 +10,11 @@ interface Variables {
 const docs = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // List all published documents (optionally filtered by category)
-docs.get('/', authMiddleware(), async (c) => {
+docs.get('/', authMiddleware(), readerMiddleware(), async (c) => {
 	const categoryId = c.req.query('category_id');
 	const includeUnpublished = c.req.query('include_unpublished') === 'true';
 	const user = c.get('user');
-	const hasAdminPermission = user.permissions?.includes('admin') ?? false;
+	const hasAdminPermission = user.permissions?.includes('hub:edit') ?? false;
 
 	let query = `
 		SELECT d.*, c.name as category_name, c.slug as category_slug
@@ -45,7 +45,7 @@ docs.get('/', authMiddleware(), async (c) => {
 });
 
 // Get single document by slug
-docs.get('/:slug', authMiddleware(), async (c) => {
+docs.get('/:slug', authMiddleware(), readerMiddleware(), async (c) => {
 	const slug = c.req.param('slug');
 
 	const doc = await c.env.DB.prepare(
@@ -64,7 +64,7 @@ docs.get('/:slug', authMiddleware(), async (c) => {
 	// Only show unpublished docs to admins (using Auth0 RBAC)
 	if (!doc.is_published) {
 		const user = c.get('user');
-		const hasAdminPermission = user.permissions?.includes('admin') ?? false;
+		const hasAdminPermission = user.permissions?.includes('hub:edit') ?? false;
 
 		if (!hasAdminPermission) {
 			return c.json({ error: 'Document not found' }, 404);

@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { authMiddleware, AuthUser } from '../middleware/auth';
-import { adminMiddleware } from '../middleware/admin';
+import { adminMiddleware, readerMiddleware } from '../middleware/admin';
 
 interface Variables {
 	user: AuthUser;
@@ -10,7 +10,7 @@ interface Variables {
 const links = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // List all links (optionally filtered by category)
-links.get('/', authMiddleware(), async (c) => {
+links.get('/', authMiddleware(), readerMiddleware(), async (c) => {
 	const categoryId = c.req.query('category_id');
 	const pinnedOnly = c.req.query('pinned') === 'true';
 
@@ -42,7 +42,7 @@ links.get('/', authMiddleware(), async (c) => {
 });
 
 // Get single link
-links.get('/:id', authMiddleware(), async (c) => {
+links.get('/:id', authMiddleware(), readerMiddleware(), async (c) => {
 	const id = c.req.param('id');
 	const link = await c.env.DB.prepare(
 		`SELECT l.*, c.name as category_name, c.slug as category_slug

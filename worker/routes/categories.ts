@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { authMiddleware, AuthUser } from '../middleware/auth';
-import { adminMiddleware } from '../middleware/admin';
+import { adminMiddleware, readerMiddleware } from '../middleware/admin';
 
 interface Variables {
 	user: AuthUser;
@@ -9,8 +9,8 @@ interface Variables {
 
 const categories = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-// List all categories (public, but requires auth)
-categories.get('/', authMiddleware(), async (c) => {
+// List all categories (requires hub:read)
+categories.get('/', authMiddleware(), readerMiddleware(), async (c) => {
 	const { results } = await c.env.DB.prepare(
 		'SELECT * FROM categories ORDER BY sort_order ASC, name ASC'
 	).all();
@@ -19,7 +19,7 @@ categories.get('/', authMiddleware(), async (c) => {
 });
 
 // Get single category
-categories.get('/:id', authMiddleware(), async (c) => {
+categories.get('/:id', authMiddleware(), readerMiddleware(), async (c) => {
 	const id = c.req.param('id');
 	const category = await c.env.DB.prepare(
 		'SELECT * FROM categories WHERE id = ?'

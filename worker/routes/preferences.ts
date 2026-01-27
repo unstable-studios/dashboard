@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { authMiddleware, AuthUser } from '../middleware/auth';
+import { readerMiddleware } from '../middleware/admin';
 
 interface Variables {
 	user: AuthUser;
@@ -14,7 +15,7 @@ interface UserPreferences {
 const preferences = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // Get user preferences
-preferences.get('/', authMiddleware(), async (c) => {
+preferences.get('/', authMiddleware(), readerMiddleware(), async (c) => {
 	const user = c.get('user');
 
 	const result = await c.env.DB.prepare(
@@ -47,7 +48,7 @@ preferences.get('/', authMiddleware(), async (c) => {
 });
 
 // Update user preferences
-preferences.put('/', authMiddleware(), async (c) => {
+preferences.put('/', authMiddleware(), readerMiddleware(), async (c) => {
 	const user = c.get('user');
 	const body = await c.req.json<Partial<UserPreferences>>();
 
@@ -105,7 +106,7 @@ preferences.put('/', authMiddleware(), async (c) => {
 });
 
 // Toggle a favorite link
-preferences.post('/toggle-favorite/:linkId', authMiddleware(), async (c) => {
+preferences.post('/toggle-favorite/:linkId', authMiddleware(), readerMiddleware(), async (c) => {
 	const user = c.get('user');
 	const linkId = parseInt(c.req.param('linkId'), 10);
 
@@ -153,7 +154,7 @@ preferences.post('/toggle-favorite/:linkId', authMiddleware(), async (c) => {
 });
 
 // Toggle a favorite document
-preferences.post('/toggle-favorite-doc/:docId', authMiddleware(), async (c) => {
+preferences.post('/toggle-favorite-doc/:docId', authMiddleware(), readerMiddleware(), async (c) => {
 	const user = c.get('user');
 	const docId = parseInt(c.req.param('docId'), 10);
 

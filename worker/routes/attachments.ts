@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { authMiddleware, AuthUser } from '../middleware/auth';
-import { adminMiddleware } from '../middleware/admin';
+import { adminMiddleware, readerMiddleware } from '../middleware/admin';
 
 interface Variables {
 	user: AuthUser;
@@ -37,7 +37,7 @@ const ALLOWED_TYPES = [
 const attachments = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // List attachments for a document
-attachments.get('/document/:documentId', authMiddleware(), async (c) => {
+attachments.get('/document/:documentId', authMiddleware(), readerMiddleware(), async (c) => {
 	const documentId = c.req.param('documentId');
 
 	const { results } = await c.env.DB.prepare(
@@ -51,7 +51,7 @@ attachments.get('/document/:documentId', authMiddleware(), async (c) => {
 });
 
 // Get download URL for an attachment
-attachments.get('/:id/download', authMiddleware(), async (c) => {
+attachments.get('/:id/download', authMiddleware(), readerMiddleware(), async (c) => {
 	const id = c.req.param('id');
 
 	const attachment = await c.env.DB.prepare(
