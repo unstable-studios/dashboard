@@ -1,0 +1,49 @@
+/**
+ * For more details on how to configure Wrangler, refer to:
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "echo-hub",
+	"main": "./worker/index.ts",
+	"preview_urls": false,
+	"workers_dev": false,
+	"routes": [
+		{
+			"pattern": "hub.unstablestudios.com/*",
+			"zone_name": "unstablestudios.com"
+		}
+	],
+	"compatibility_date": "2025-10-08",
+	"compatibility_flags": ["nodejs_compat"],
+	"observability": {
+		"enabled": true,
+	},
+	"assets": {
+		"not_found_handling": "single-page-application",
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "echo-hub",
+			"database_id": "6042bff6-a3e6-4b12-8bf7-3b62acabcbd6",
+		},
+	],
+	"kv_namespaces": [
+		{
+			"binding": "CACHE",
+			"id": "728003b4c0db4738b05d64d22c10b9eb",
+		},
+	],
+	"r2_buckets": [
+		{
+			"binding": "ATTACHMENTS",
+			"bucket_name": "echo-hub-attachments",
+		},
+	],
+	// Auth0 vars loaded from Doppler/environment:
+	// - AUTH0_DOMAIN
+	// - AUTH0_CLIENT_ID
+	// - AUTH0_CLIENT_SECRET
+	// - AUTH0_AUDIENCE
+}
