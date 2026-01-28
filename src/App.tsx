@@ -8,6 +8,7 @@ import { LinksPage } from "@/pages/LinksPage";
 import { DocsPage } from "@/pages/DocsPage";
 import { DocViewer } from "@/pages/DocViewer";
 import { DocEditor } from "@/pages/DocEditor";
+import { CalendarPage } from "@/pages/CalendarPage";
 import { AdminPanel } from "@/pages/AdminPanel";
 import { SettingsPage } from "@/pages/SettingsPage";
 
@@ -66,6 +67,14 @@ function App() {
           element={
             <ProtectedRoute>
               <DocEditor />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/calendar"
+          element={
+            <ProtectedRoute>
+              <CalendarPage />
             </ProtectedRoute>
           }
         />

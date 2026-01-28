@@ -1,16 +1,19 @@
 import { Hono } from 'hono';
 import { authMiddleware, AuthUser } from '../middleware/auth';
-import { adminMiddleware, readerMiddleware } from '../middleware/admin';
+import {
+	categoriesReadMiddleware,
+	categoriesEditMiddleware,
+	categoriesDeleteMiddleware,
+} from '../middleware/permissions';
 
 interface Variables {
 	user: AuthUser;
-	isAdmin: boolean;
 }
 
 const categories = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-// List all categories (requires hub:read)
-categories.get('/', authMiddleware(), readerMiddleware(), async (c) => {
+// List all categories (requires categories:read)
+categories.get('/', authMiddleware(), categoriesReadMiddleware(), async (c) => {
 	const { results } = await c.env.DB.prepare(
 		'SELECT * FROM categories ORDER BY sort_order ASC, name ASC'
 	).all();
@@ -19,7 +22,7 @@ categories.get('/', authMiddleware(), readerMiddleware(), async (c) => {
 });
 
 // Get single category
-categories.get('/:id', authMiddleware(), readerMiddleware(), async (c) => {
+categories.get('/:id', authMiddleware(), categoriesReadMiddleware(), async (c) => {
 	const id = c.req.param('id');
 	const category = await c.env.DB.prepare(
 		'SELECT * FROM categories WHERE id = ?'
@@ -34,8 +37,8 @@ categories.get('/:id', authMiddleware(), readerMiddleware(), async (c) => {
 	return c.json({ category });
 });
 
-// Create category (admin only)
-categories.post('/', authMiddleware(), adminMiddleware(), async (c) => {
+// Create category (requires categories:edit)
+categories.post('/', authMiddleware(), categoriesEditMiddleware(), async (c) => {
 	const body = await c.req.json<{
 		name: string;
 		slug: string;
@@ -68,8 +71,8 @@ categories.post('/', authMiddleware(), adminMiddleware(), async (c) => {
 	}
 });
 
-// Update category (admin only)
-categories.put('/:id', authMiddleware(), adminMiddleware(), async (c) => {
+// Update category (requires categories:edit)
+categories.put('/:id', authMiddleware(), categoriesEditMiddleware(), async (c) => {
 	const id = c.req.param('id');
 	const body = await c.req.json<{
 		name?: string;
@@ -107,8 +110,8 @@ categories.put('/:id', authMiddleware(), adminMiddleware(), async (c) => {
 	return c.json({ success: true });
 });
 
-// Delete category (admin only)
-categories.delete('/:id', authMiddleware(), adminMiddleware(), async (c) => {
+// Delete category (requires categories:delete)
+categories.delete('/:id', authMiddleware(), categoriesDeleteMiddleware(), async (c) => {
 	const id = c.req.param('id');
 
 	await c.env.DB.prepare('DELETE FROM categories WHERE id = ?').bind(id).run();

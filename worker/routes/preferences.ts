@@ -1,6 +1,9 @@
 import { Hono } from 'hono';
 import { authMiddleware, AuthUser } from '../middleware/auth';
-import { readerMiddleware } from '../middleware/admin';
+import {
+	prefsReadMiddleware,
+	prefsEditMiddleware,
+} from '../middleware/permissions';
 
 interface Variables {
 	user: AuthUser;
@@ -15,7 +18,7 @@ interface UserPreferences {
 const preferences = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // Get user preferences
-preferences.get('/', authMiddleware(), readerMiddleware(), async (c) => {
+preferences.get('/', authMiddleware(), prefsReadMiddleware(), async (c) => {
 	const user = c.get('user');
 
 	const result = await c.env.DB.prepare(
@@ -47,8 +50,8 @@ preferences.get('/', authMiddleware(), readerMiddleware(), async (c) => {
 	});
 });
 
-// Update user preferences
-preferences.put('/', authMiddleware(), readerMiddleware(), async (c) => {
+// Update user preferences (requires prefs:edit)
+preferences.put('/', authMiddleware(), prefsEditMiddleware(), async (c) => {
 	const user = c.get('user');
 	const body = await c.req.json<Partial<UserPreferences>>();
 
@@ -105,8 +108,8 @@ preferences.put('/', authMiddleware(), readerMiddleware(), async (c) => {
 	return c.json({ success: true });
 });
 
-// Toggle a favorite link
-preferences.post('/toggle-favorite/:linkId', authMiddleware(), readerMiddleware(), async (c) => {
+// Toggle a favorite link (requires prefs:edit)
+preferences.post('/toggle-favorite/:linkId', authMiddleware(), prefsEditMiddleware(), async (c) => {
 	const user = c.get('user');
 	const linkId = parseInt(c.req.param('linkId'), 10);
 
@@ -153,8 +156,8 @@ preferences.post('/toggle-favorite/:linkId', authMiddleware(), readerMiddleware(
 	});
 });
 
-// Toggle a favorite document
-preferences.post('/toggle-favorite-doc/:docId', authMiddleware(), readerMiddleware(), async (c) => {
+// Toggle a favorite document (requires prefs:edit)
+preferences.post('/toggle-favorite-doc/:docId', authMiddleware(), prefsEditMiddleware(), async (c) => {
 	const user = c.get('user');
 	const docId = parseInt(c.req.param('docId'), 10);
 

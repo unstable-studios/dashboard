@@ -1,20 +1,24 @@
 import { Hono } from 'hono';
 import { authMiddleware, AuthUser } from '../middleware/auth';
-import { adminMiddleware, readerMiddleware } from '../middleware/admin';
+import {
+	docsReadMiddleware,
+	docsEditMiddleware,
+	docsDeleteMiddleware,
+	canReadUnpublishedDocs,
+} from '../middleware/permissions';
 
 interface Variables {
 	user: AuthUser;
-	isAdmin: boolean;
 }
 
 const docs = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // List all published documents (optionally filtered by category)
-docs.get('/', authMiddleware(), readerMiddleware(), async (c) => {
+docs.get('/', authMiddleware(), docsReadMiddleware(), async (c) => {
 	const categoryId = c.req.query('category_id');
 	const includeUnpublished = c.req.query('include_unpublished') === 'true';
 	const user = c.get('user');
-	const hasAdminPermission = user.permissions?.includes('hub:edit') ?? false;
+	const hasUnpublishedAccess = canReadUnpublishedDocs(user.permissions);
 
 	let query = `
 		SELECT d.*, c.name as category_name, c.slug as category_slug
@@ -24,8 +28,8 @@ docs.get('/', authMiddleware(), readerMiddleware(), async (c) => {
 	`;
 	const params: (string | number)[] = [];
 
-	// Only admins can see unpublished documents
-	if (!includeUnpublished || !hasAdminPermission) {
+	// Only users with unpublished access can see unpublished documents
+	if (!includeUnpublished || !hasUnpublishedAccess) {
 		query += ' AND d.is_published = 1';
 	}
 
@@ -45,7 +49,7 @@ docs.get('/', authMiddleware(), readerMiddleware(), async (c) => {
 });
 
 // Get single document by slug
-docs.get('/:slug', authMiddleware(), readerMiddleware(), async (c) => {
+docs.get('/:slug', authMiddleware(), docsReadMiddleware(), async (c) => {
 	const slug = c.req.param('slug');
 
 	const doc = await c.env.DB.prepare(
@@ -61,12 +65,10 @@ docs.get('/:slug', authMiddleware(), readerMiddleware(), async (c) => {
 		return c.json({ error: 'Document not found' }, 404);
 	}
 
-	// Only show unpublished docs to admins (using Auth0 RBAC)
+	// Only show unpublished docs to users with unpublished access
 	if (!doc.is_published) {
 		const user = c.get('user');
-		const hasAdminPermission = user.permissions?.includes('hub:edit') ?? false;
-
-		if (!hasAdminPermission) {
+		if (!canReadUnpublishedDocs(user.permissions)) {
 			return c.json({ error: 'Document not found' }, 404);
 		}
 	}
@@ -74,8 +76,8 @@ docs.get('/:slug', authMiddleware(), readerMiddleware(), async (c) => {
 	return c.json({ document: doc });
 });
 
-// Create document (admin only)
-docs.post('/', authMiddleware(), adminMiddleware(), async (c) => {
+// Create document (requires docs:edit)
+docs.post('/', authMiddleware(), docsEditMiddleware(), async (c) => {
 	const user = c.get('user');
 	const body = await c.req.json<{
 		title: string;
@@ -129,8 +131,8 @@ docs.post('/', authMiddleware(), adminMiddleware(), async (c) => {
 	}
 });
 
-// Update document (admin only)
-docs.put('/:slug', authMiddleware(), adminMiddleware(), async (c) => {
+// Update document (requires docs:edit)
+docs.put('/:slug', authMiddleware(), docsEditMiddleware(), async (c) => {
 	const slug = c.req.param('slug');
 	const user = c.get('user');
 	const body = await c.req.json<{
@@ -203,8 +205,8 @@ docs.put('/:slug', authMiddleware(), adminMiddleware(), async (c) => {
 	}
 });
 
-// Delete document (admin only)
-docs.delete('/:slug', authMiddleware(), adminMiddleware(), async (c) => {
+// Delete document (requires docs:delete)
+docs.delete('/:slug', authMiddleware(), docsDeleteMiddleware(), async (c) => {
 	const slug = c.req.param('slug');
 
 	const result = await c.env.DB.prepare('DELETE FROM documents WHERE slug = ?')

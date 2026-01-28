@@ -1,11 +1,15 @@
 import { Hono } from "hono";
 import { authMiddleware, AuthUser } from "./middleware/auth";
 import { adminMiddleware, hasAdminPermission } from "./middleware/admin";
+import { getCalendarPermissions } from "./middleware/calendar";
+import { getHubPermissions } from "./middleware/permissions";
 import links from "./routes/links";
 import categories from "./routes/categories";
 import docs from "./routes/docs";
 import preferences from "./routes/preferences";
 import attachments from "./routes/attachments";
+import reminders from "./routes/reminders";
+import calendar from "./routes/calendar";
 
 interface Variables {
   user: AuthUser;
@@ -41,6 +45,8 @@ app.get("/api/auth/me", authMiddleware(), (c) => {
     picture: user.picture,
     permissions: user.permissions,
     isAdmin: hasAdminPermission(user.permissions),
+    hub: getHubPermissions(user.permissions),
+    calendar: getCalendarPermissions(user.permissions),
   });
 });
 
@@ -72,5 +78,29 @@ app.route("/api/preferences", preferences);
 
 // File attachments
 app.route("/api/attachments", attachments);
+
+// Reminders
+app.route("/api/reminders", reminders);
+
+// Calendar token management
+app.route("/api/calendar", calendar);
+
+// iCal feed (token-authenticated, at root level for calendar app compatibility)
+app.get("/calendar.ics", async (c) => {
+  // Rewrite to the calendar feed handler with token
+  const token = c.req.query("token");
+  const url = new URL(c.req.url);
+  url.pathname = "/api/calendar/feed";
+  if (token) {
+    url.searchParams.set("token", token);
+  }
+  // Forward to internal handler
+  const response = await calendar.fetch(
+    new Request(url.toString(), c.req.raw),
+    c.env,
+    c.executionCtx
+  );
+  return response;
+});
 
 export default app;

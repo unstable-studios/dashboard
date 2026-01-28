@@ -1,10 +1,13 @@
 import { Hono } from 'hono';
 import { authMiddleware, AuthUser } from '../middleware/auth';
-import { adminMiddleware, readerMiddleware } from '../middleware/admin';
+import {
+	attachmentsReadMiddleware,
+	attachmentsUploadMiddleware,
+	attachmentsDeleteMiddleware,
+} from '../middleware/permissions';
 
 interface Variables {
 	user: AuthUser;
-	isAdmin: boolean;
 }
 
 interface Attachment {
@@ -37,7 +40,7 @@ const ALLOWED_TYPES = [
 const attachments = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // List attachments for a document
-attachments.get('/document/:documentId', authMiddleware(), readerMiddleware(), async (c) => {
+attachments.get('/document/:documentId', authMiddleware(), attachmentsReadMiddleware(), async (c) => {
 	const documentId = c.req.param('documentId');
 
 	const { results } = await c.env.DB.prepare(
@@ -51,7 +54,7 @@ attachments.get('/document/:documentId', authMiddleware(), readerMiddleware(), a
 });
 
 // Get download URL for an attachment
-attachments.get('/:id/download', authMiddleware(), readerMiddleware(), async (c) => {
+attachments.get('/:id/download', authMiddleware(), attachmentsReadMiddleware(), async (c) => {
 	const id = c.req.param('id');
 
 	const attachment = await c.env.DB.prepare(
@@ -87,11 +90,11 @@ attachments.get('/:id/download', authMiddleware(), readerMiddleware(), async (c)
 	return new Response(object.body, { headers });
 });
 
-// Upload attachment (admin only)
+// Upload attachment (requires attachments:upload)
 attachments.post(
 	'/document/:documentId',
 	authMiddleware(),
-	adminMiddleware(),
+	attachmentsUploadMiddleware(),
 	async (c) => {
 		const user = c.get('user');
 		const documentId = parseInt(c.req.param('documentId'), 10);
@@ -185,8 +188,8 @@ attachments.post(
 	}
 );
 
-// Delete attachment (admin only)
-attachments.delete('/:id', authMiddleware(), adminMiddleware(), async (c) => {
+// Delete attachment (requires attachments:delete)
+attachments.delete('/:id', authMiddleware(), attachmentsDeleteMiddleware(), async (c) => {
 	const id = c.req.param('id');
 
 	const attachment = await c.env.DB.prepare(

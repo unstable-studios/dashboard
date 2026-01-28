@@ -10,7 +10,7 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
-import { Home, Link as LinkIcon, FileText, Settings, Shield } from 'lucide-react';
+import { Home, Link as LinkIcon, FileText, Calendar, Settings, Shield } from 'lucide-react';
 
 interface AppShellProps {
 	children: React.ReactNode;
@@ -20,6 +20,7 @@ const navItems = [
 	{ path: '/', label: 'Dashboard', icon: Home },
 	{ path: '/links', label: 'Links', icon: LinkIcon },
 	{ path: '/docs', label: 'Documents', icon: FileText },
+	{ path: '/calendar', label: 'Calendar', icon: Calendar },
 ];
 
 export function AppShell({ children }: AppShellProps) {

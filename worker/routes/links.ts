@@ -1,16 +1,19 @@
 import { Hono } from 'hono';
 import { authMiddleware, AuthUser } from '../middleware/auth';
-import { adminMiddleware, readerMiddleware } from '../middleware/admin';
+import {
+	linksReadMiddleware,
+	linksEditMiddleware,
+	linksDeleteMiddleware,
+} from '../middleware/permissions';
 
 interface Variables {
 	user: AuthUser;
-	isAdmin: boolean;
 }
 
 const links = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // List all links (optionally filtered by category)
-links.get('/', authMiddleware(), readerMiddleware(), async (c) => {
+links.get('/', authMiddleware(), linksReadMiddleware(), async (c) => {
 	const categoryId = c.req.query('category_id');
 	const pinnedOnly = c.req.query('pinned') === 'true';
 
@@ -42,7 +45,7 @@ links.get('/', authMiddleware(), readerMiddleware(), async (c) => {
 });
 
 // Get single link
-links.get('/:id', authMiddleware(), readerMiddleware(), async (c) => {
+links.get('/:id', authMiddleware(), linksReadMiddleware(), async (c) => {
 	const id = c.req.param('id');
 	const link = await c.env.DB.prepare(
 		`SELECT l.*, c.name as category_name, c.slug as category_slug
@@ -60,8 +63,8 @@ links.get('/:id', authMiddleware(), readerMiddleware(), async (c) => {
 	return c.json({ link });
 });
 
-// Create link (admin only)
-links.post('/', authMiddleware(), adminMiddleware(), async (c) => {
+// Create link (requires links:edit)
+links.post('/', authMiddleware(), linksEditMiddleware(), async (c) => {
 	const body = await c.req.json<{
 		title: string;
 		url: string;
@@ -96,8 +99,8 @@ links.post('/', authMiddleware(), adminMiddleware(), async (c) => {
 	return c.json({ success: true, id: result.meta.last_row_id }, 201);
 });
 
-// Update link (admin only)
-links.put('/:id', authMiddleware(), adminMiddleware(), async (c) => {
+// Update link (requires links:edit)
+links.put('/:id', authMiddleware(), linksEditMiddleware(), async (c) => {
 	const id = c.req.param('id');
 	const body = await c.req.json<{
 		title?: string;
@@ -142,8 +145,8 @@ links.put('/:id', authMiddleware(), adminMiddleware(), async (c) => {
 	return c.json({ success: true });
 });
 
-// Delete link (admin only)
-links.delete('/:id', authMiddleware(), adminMiddleware(), async (c) => {
+// Delete link (requires links:delete)
+links.delete('/:id', authMiddleware(), linksDeleteMiddleware(), async (c) => {
 	const id = c.req.param('id');
 
 	await c.env.DB.prepare('DELETE FROM service_links WHERE id = ?')
