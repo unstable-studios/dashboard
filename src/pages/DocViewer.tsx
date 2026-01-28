@@ -249,7 +249,7 @@ export function DocViewer() {
 								</p>
 							)}
 							{!document.is_published && (
-								<span className="inline-block mt-2 bg-yellow-500/20 text-yellow-600 px-2 py-0.5 rounded text-sm">
+								<span className="inline-block mt-2 bg-amber-500/20 text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded text-sm">
 									Draft
 								</span>
 							)}

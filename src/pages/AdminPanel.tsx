@@ -404,9 +404,9 @@ export function AdminPanel() {
 												</TableCell>
 												<TableCell>
 													{doc.is_published ? (
-														<span className="text-green-600">Published</span>
+														<span className="text-green-600 dark:text-green-500">Published</span>
 													) : (
-														<span className="text-yellow-600">Draft</span>
+														<span className="text-amber-700 dark:text-amber-400">Draft</span>
 													)}
 												</TableCell>
 												<TableCell>

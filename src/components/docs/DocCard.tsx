@@ -88,7 +88,7 @@ export function DocCard({ doc, isAdmin, isUserPinned, onEdit, onDelete, onToggle
 									</span>
 								)}
 								{!doc.is_published && (
-									<span className="bg-yellow-500/20 text-yellow-600 px-2 py-0.5 rounded">
+									<span className="bg-amber-500/20 text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded">
 										Draft
 									</span>
 								)}
