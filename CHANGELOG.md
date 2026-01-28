@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.2.1...echo-hub-v1.3.0) (2026-01-28)
+
+
+### Features
+
+* **echo-hub:** add calendar/reminders feature ([#35](https://github.com/unstable-studios/echo-core/issues/35)) ([0b93728](https://github.com/unstable-studios/echo-core/commit/0b93728f0f238b90819ebcc21243e2c5e1e44f00))
+
 ## [1.2.1](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.2.0...echo-hub-v1.2.1) (2026-01-28)
 
 
