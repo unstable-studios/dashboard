@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.5.1...echo-hub-v1.6.0) (2026-01-29)
+
+
+### Features
+
+* **echo-hub:** UX improvements with document combobox and version history ([#55](https://github.com/unstable-studios/echo-core/issues/55)) ([e7c7485](https://github.com/unstable-studios/echo-core/commit/e7c74859716fb88b58992724f8da464a1fa0609b))
+
 ## [1.5.1](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.5.0...echo-hub-v1.5.1) (2026-01-29)
 
 
