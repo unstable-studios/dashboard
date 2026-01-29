@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useState } from 'react';
 import {
 	DndContext,
 	closestCenter,
@@ -26,10 +26,10 @@ export interface DragHandleProps {
 interface SortableItemProps {
 	id: number;
 	children: (dragHandleProps: DragHandleProps) => React.ReactNode;
-	isDragActiveRef: React.RefObject<boolean>;
+	isAnyDragging: boolean;
 }
 
-function SortableItem({ id, children, isDragActiveRef }: SortableItemProps) {
+function SortableItem({ id, children, isAnyDragging }: SortableItemProps) {
 	const {
 		attributes,
 		listeners,
@@ -39,22 +39,18 @@ function SortableItem({ id, children, isDragActiveRef }: SortableItemProps) {
 		isDragging,
 	} = useSortable({ id });
 
-	const style = {
+	const style: React.CSSProperties = {
 		transform: CSS.Transform.toString(transform),
 		transition,
 		opacity: isDragging ? 0.5 : 1,
 	};
 
-	// Prevent click events when drag is active to avoid navigating after drop
-	const handleClick = (e: React.MouseEvent) => {
-		if (isDragActiveRef.current) {
-			e.preventDefault();
-			e.stopPropagation();
-		}
-	};
-
 	return (
-		<div ref={setNodeRef} style={style} onClickCapture={handleClick}>
+		<div
+			ref={setNodeRef}
+			style={style}
+			className={isAnyDragging ? '[&_a]:pointer-events-none' : ''}
+		>
 			{children({ listeners, attributes })}
 		</div>
 	);
@@ -73,7 +69,7 @@ export function SortableList<T extends { id: number }>({
 	renderItem,
 	disabled = false,
 }: SortableListProps<T>) {
-	const isDragActiveRef = useRef(false);
+	const [isDragging, setIsDragging] = useState(false);
 
 	const sensors = useSensors(
 		useSensor(PointerSensor, {
@@ -87,16 +83,16 @@ export function SortableList<T extends { id: number }>({
 	);
 
 	const handleDragStart = () => {
-		isDragActiveRef.current = true;
+		setIsDragging(true);
 	};
 
 	const handleDragEnd = (event: DragEndEvent) => {
 		const { active, over } = event;
 
-		// Keep drag active flag briefly to block the click event that fires after drop
+		// Delay resetting drag state to ensure pointer-events:none blocks the click
 		setTimeout(() => {
-			isDragActiveRef.current = false;
-		}, 0);
+			setIsDragging(false);
+		}, 50);
 
 		if (over && active.id !== over.id) {
 			const oldIndex = items.findIndex((item) => item.id === active.id);
@@ -136,7 +132,7 @@ export function SortableList<T extends { id: number }>({
 			>
 				<div className="space-y-2">
 					{items.map((item) => (
-						<SortableItem key={item.id} id={item.id} isDragActiveRef={isDragActiveRef}>
+						<SortableItem key={item.id} id={item.id} isAnyDragging={isDragging}>
 							{(dragHandleProps) => renderItem(item, dragHandleProps)}
 						</SortableItem>
 					))}
