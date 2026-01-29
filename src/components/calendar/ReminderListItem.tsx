@@ -56,9 +56,13 @@ export function ReminderListItem({
 						<div className="flex items-center gap-2">
 							<h3 className="font-semibold truncate">{reminder.title}</h3>
 							{isGlobal ? (
-								<Globe className="h-3 w-3 text-muted-foreground shrink-0" title="Organization-wide" />
+								<span title="Organization-wide">
+									<Globe className="h-3 w-3 text-muted-foreground shrink-0" />
+								</span>
 							) : (
-								<User className="h-3 w-3 text-muted-foreground shrink-0" title="Personal" />
+								<span title="Personal">
+									<User className="h-3 w-3 text-muted-foreground shrink-0" />
+								</span>
 							)}
 						</div>
 						{reminder.description && (

@@ -36,6 +36,14 @@ export interface CalendarPermissions {
 	canDeleteGlobal: boolean;
 }
 
+interface ReminderCardProps {
+	reminder: Reminder;
+	currentUserId: string;
+	permissions: CalendarPermissions;
+	onEdit?: (reminder: Reminder) => void;
+	onDelete?: (reminder: Reminder) => void;
+}
+
 export function ReminderCard({
 	reminder,
 	currentUserId,

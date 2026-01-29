@@ -69,9 +69,9 @@ export function DocListItem({ doc, isAdmin, isUserPinned, onEdit, onDelete, onTo
 	return (
 		<ContextMenu>
 			<ContextMenuTrigger asChild>
-				{isExternal ? (
+				{isExternal && doc.external_url ? (
 					<a
-						href={doc.external_url!}
+						href={doc.external_url}
 						target="_blank"
 						rel="noopener noreferrer"
 						className={itemClassName}
