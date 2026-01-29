@@ -1,12 +1,15 @@
 import { useAuth0 } from '@auth0/auth0-react';
 import { useEffect, useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
-import { ReminderCard, Reminder, CalendarPermissions } from '@/components/calendar/ReminderCard';
+import { Reminder, CalendarPermissions } from '@/components/calendar/ReminderCard';
+import { ReminderGrid } from '@/components/calendar/ReminderGrid';
 import { ReminderDialog } from '@/components/calendar/ReminderDialog';
 import { CalendarSettings } from '@/components/calendar/CalendarSettings';
 import { Button } from '@/components/ui/button';
+import { ViewToggle } from '@/components/ui/view-toggle';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { authFetch } from '@/lib/auth';
+import { useViewPreference } from '@/hooks/useViewPreference';
 import { Plus, Bell, Settings } from 'lucide-react';
 
 interface Document {
@@ -27,6 +30,7 @@ const DEFAULT_PERMISSIONS: CalendarPermissions = {
 
 export function CalendarPage() {
 	const { getAccessTokenSilently } = useAuth0();
+	const [viewMode, setViewMode] = useViewPreference();
 	const [reminders, setReminders] = useState<Reminder[]>([]);
 	const [documents, setDocuments] = useState<Document[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -134,12 +138,15 @@ export function CalendarPage() {
 							Reminders for recurring business tasks
 						</p>
 					</div>
-					{canAddReminder && (
-						<Button onClick={handleNewReminder} className="gap-2">
-							<Plus className="h-4 w-4" />
-							New Reminder
-						</Button>
-					)}
+					<div className="flex items-center gap-3">
+						<ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
+						{canAddReminder && (
+							<Button onClick={handleNewReminder} className="gap-2">
+								<Plus className="h-4 w-4" />
+								New Reminder
+							</Button>
+						)}
+					</div>
 				</div>
 
 				<Tabs defaultValue="reminders">
@@ -182,35 +189,18 @@ export function CalendarPage() {
 
 						{error ? (
 							<div className="text-destructive">{error}</div>
-						) : loading ? (
-							<div className="text-muted-foreground">Loading reminders...</div>
-						) : sortedReminders.length === 0 ? (
-							<div className="text-center py-12 text-muted-foreground">
-								<Bell className="h-12 w-12 mx-auto mb-4 opacity-50" />
-								<p>No reminders found</p>
-								{canAddReminder && (
-									<Button
-										variant="outline"
-										className="mt-4"
-										onClick={handleNewReminder}
-									>
-										Create your first reminder
-									</Button>
-								)}
-							</div>
 						) : (
-							<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-								{sortedReminders.map((reminder) => (
-									<ReminderCard
-										key={reminder.id}
-										reminder={reminder}
-										currentUserId={currentUserId}
-										permissions={permissions}
-										onEdit={handleEdit}
-										onDelete={handleDelete}
-									/>
-								))}
-							</div>
+							<ReminderGrid
+								reminders={sortedReminders}
+								loading={loading}
+								currentUserId={currentUserId}
+								permissions={permissions}
+								viewMode={viewMode}
+								onEdit={handleEdit}
+								onDelete={handleDelete}
+								onNewReminder={handleNewReminder}
+								canAddReminder={canAddReminder}
+							/>
 						)}
 					</TabsContent>
 

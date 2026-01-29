@@ -1,4 +1,3 @@
-import { Card, CardContent } from '@/components/ui/card';
 import {
 	ContextMenu,
 	ContextMenuContent,
@@ -7,22 +6,9 @@ import {
 	ContextMenuTrigger,
 } from '@/components/ui/context-menu';
 import { ExternalLink, Pin, PinOff, Pencil, Trash2 } from 'lucide-react';
+import { ServiceLink } from './LinkCard';
 
-export interface ServiceLink {
-	id: number;
-	title: string;
-	description: string | null;
-	url: string;
-	icon: string | null;
-	icon_type: string;
-	category_id: number | null;
-	category_name: string | null;
-	category_slug: string | null;
-	is_pinned: number;
-	sort_order: number;
-}
-
-interface LinkCardProps {
+interface LinkListItemProps {
 	link: ServiceLink;
 	isAdmin?: boolean;
 	isUserPinned?: boolean;
@@ -31,52 +17,46 @@ interface LinkCardProps {
 	onTogglePin?: (link: ServiceLink) => void;
 }
 
-export function LinkCard({
+export function LinkListItem({
 	link,
 	isAdmin,
 	isUserPinned,
 	onEdit,
 	onDelete,
 	onTogglePin,
-}: LinkCardProps) {
-	const handleClick = () => {
-		// Open link in new tab
-		window.open(link.url, '_blank', 'noopener,noreferrer');
-	};
-
+}: LinkListItemProps) {
 	return (
 		<ContextMenu>
 			<ContextMenuTrigger asChild>
-				<div onClick={handleClick} className="block cursor-pointer">
-					<Card className="hover:bg-accent transition-colors h-full">
-						<CardContent className="p-6">
-							<div className="flex items-start gap-4">
-								<div className="text-3xl flex-shrink-0">
-									{link.icon || '🔗'}
-								</div>
-								<div className="flex-1 min-w-0">
-									<div className="flex items-center gap-2">
-										<h3 className="text-lg font-semibold truncate">{link.title}</h3>
-										{isUserPinned && (
-											<Pin className="h-3 w-3 text-primary flex-shrink-0" />
-										)}
-										<ExternalLink className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-									</div>
-									{link.description && (
-										<p className="text-sm text-muted-foreground mt-2 line-clamp-2">
-											{link.description}
-										</p>
-									)}
-									{link.category_name && (
-										<span className="text-xs text-muted-foreground mt-3 inline-block">
-											{link.category_name}
-										</span>
-									)}
-								</div>
-							</div>
-						</CardContent>
-					</Card>
-				</div>
+				<a
+					href={link.url}
+					target="_blank"
+					rel="noopener noreferrer"
+					className="flex items-center gap-4 p-4 rounded-lg border bg-card hover:bg-accent transition-colors"
+				>
+					<div className="text-2xl flex-shrink-0">
+						{link.icon || '🔗'}
+					</div>
+					<div className="flex-1 min-w-0">
+						<div className="flex items-center gap-2">
+							<h3 className="font-semibold truncate">{link.title}</h3>
+							{isUserPinned && (
+								<Pin className="h-3 w-3 text-primary flex-shrink-0" />
+							)}
+						</div>
+						{link.description && (
+							<p className="text-sm text-muted-foreground truncate">
+								{link.description}
+							</p>
+						)}
+					</div>
+					{link.category_name && (
+						<span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded hidden sm:block">
+							{link.category_name}
+						</span>
+					)}
+					<ExternalLink className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+				</a>
 			</ContextMenuTrigger>
 			<ContextMenuContent className="w-48">
 				<ContextMenuItem

@@ -5,29 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Monitor, Moon, Sun } from 'lucide-react';
-
-type Theme = 'light' | 'dark' | 'system';
-
-function getSystemTheme(): 'light' | 'dark' {
-	return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-}
-
-function applyTheme(theme: Theme) {
-	const root = document.documentElement;
-	if (theme === 'system') {
-		const systemTheme = getSystemTheme();
-		root.classList.toggle('dark', systemTheme === 'dark');
-	} else {
-		root.classList.toggle('dark', theme === 'dark');
-	}
-}
+import { Theme, applyTheme, getStoredTheme } from '@/lib/theme';
 
 export function SettingsPage() {
 	const { user } = useAuth0();
-	const [theme, setTheme] = useState<Theme>(() => {
-		const saved = localStorage.getItem('theme') as Theme;
-		return saved || 'system';
-	});
+	const [theme, setTheme] = useState<Theme>(getStoredTheme);
 
 	useEffect(() => {
 		applyTheme(theme);

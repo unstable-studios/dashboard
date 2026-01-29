@@ -5,7 +5,9 @@ import { AppShell } from '@/components/layout/AppShell';
 import { DocList } from '@/components/docs/DocList';
 import { Document } from '@/components/docs/DocCard';
 import { Button } from '@/components/ui/button';
+import { ViewToggle } from '@/components/ui/view-toggle';
 import { authFetch } from '@/lib/auth';
+import { useViewPreference } from '@/hooks/useViewPreference';
 import { Plus } from 'lucide-react';
 
 interface Category {
@@ -19,6 +21,7 @@ interface Category {
 export function DocsPage() {
 	const { getAccessTokenSilently } = useAuth0();
 	const navigate = useNavigate();
+	const [viewMode, setViewMode] = useViewPreference();
 	const [documents, setDocuments] = useState<Document[]>([]);
 	const [categories, setCategories] = useState<Category[]>([]);
 	const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
@@ -125,14 +128,17 @@ export function DocsPage() {
 							Business processes and documentation
 						</p>
 					</div>
-					{isAdmin && (
-						<Link to="/docs/new">
-							<Button className="gap-2">
-								<Plus className="h-4 w-4" />
-								New Document
-							</Button>
-						</Link>
-					)}
+					<div className="flex items-center gap-3">
+						<ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
+						{isAdmin && (
+							<Link to="/docs/new">
+								<Button className="gap-2">
+									<Plus className="h-4 w-4" />
+									New Document
+								</Button>
+							</Link>
+						)}
+					</div>
 				</div>
 
 				{/* Category filter */}
@@ -165,6 +171,7 @@ export function DocsPage() {
 						loading={loading}
 						isAdmin={isAdmin}
 						userFavorites={userFavorites}
+						viewMode={viewMode}
 						onEdit={isAdmin ? handleEdit : undefined}
 						onDelete={isAdmin ? handleDelete : undefined}
 						onTogglePin={handleTogglePin}

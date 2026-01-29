@@ -5,7 +5,9 @@ import { LinksGrid } from '@/components/links/LinksGrid';
 import { LinkDialog } from '@/components/links/LinkDialog';
 import { ServiceLink } from '@/components/links/LinkCard';
 import { Button } from '@/components/ui/button';
+import { ViewToggle } from '@/components/ui/view-toggle';
 import { authFetch } from '@/lib/auth';
+import { useViewPreference } from '@/hooks/useViewPreference';
 import { Plus } from 'lucide-react';
 
 interface Category {
@@ -18,6 +20,7 @@ interface Category {
 
 export function LinksPage() {
 	const { getAccessTokenSilently } = useAuth0();
+	const [viewMode, setViewMode] = useViewPreference();
 	const [links, setLinks] = useState<ServiceLink[]>([]);
 	const [categories, setCategories] = useState<Category[]>([]);
 	const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
@@ -133,12 +136,15 @@ export function LinksPage() {
 							All your bookmarked services and tools
 						</p>
 					</div>
-					{isAdmin && (
-						<Button onClick={handleAddNew} className="gap-2">
-							<Plus className="h-4 w-4" />
-							Add Link
-						</Button>
-					)}
+					<div className="flex items-center gap-3">
+						<ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
+						{isAdmin && (
+							<Button onClick={handleAddNew} className="gap-2">
+								<Plus className="h-4 w-4" />
+								Add Link
+							</Button>
+						)}
+					</div>
 				</div>
 
 				{/* Category filter */}
@@ -171,6 +177,7 @@ export function LinksPage() {
 						loading={loading}
 						isAdmin={isAdmin}
 						userFavorites={userFavorites}
+						viewMode={viewMode}
 						onEdit={isAdmin ? handleEdit : undefined}
 						onDelete={isAdmin ? handleDelete : undefined}
 						onTogglePin={handleTogglePin}

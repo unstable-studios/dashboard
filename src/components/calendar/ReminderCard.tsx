@@ -8,6 +8,7 @@ import {
 	ContextMenuTrigger,
 } from '@/components/ui/context-menu';
 import { Bell, Globe, User, FileText, Pencil, Trash2, Calendar } from 'lucide-react';
+import { formatRecurrence, formatDate, isPastDue, isUpcoming } from '@/lib/calendar';
 
 export interface Reminder {
 	id: number;
@@ -33,57 +34,6 @@ export interface CalendarPermissions {
 	canEditGlobal: boolean;
 	canDeleteUser: boolean;
 	canDeleteGlobal: boolean;
-}
-
-interface ReminderCardProps {
-	reminder: Reminder;
-	currentUserId: string;
-	permissions: CalendarPermissions;
-	onEdit?: (reminder: Reminder) => void;
-	onDelete?: (reminder: Reminder) => void;
-}
-
-// Format RRULE to human-readable string
-function formatRecurrence(rrule: string | null): string | null {
-	if (!rrule) return null;
-
-	// Simple parsing for common patterns
-	if (rrule.includes('FREQ=WEEKLY')) return 'Weekly';
-	if (rrule.includes('FREQ=MONTHLY') && rrule.includes('INTERVAL=3')) return 'Quarterly';
-	if (rrule.includes('FREQ=MONTHLY')) return 'Monthly';
-	if (rrule.includes('FREQ=YEARLY')) return 'Yearly';
-	if (rrule.includes('FREQ=DAILY')) return 'Daily';
-
-	return 'Recurring';
-}
-
-// Format date for display
-function formatDate(dateStr: string): string {
-	const date = new Date(dateStr + 'T00:00:00');
-	return date.toLocaleDateString('en-US', {
-		weekday: 'short',
-		month: 'short',
-		day: 'numeric',
-		year: 'numeric',
-	});
-}
-
-// Check if date is in the past
-function isPastDue(dateStr: string): boolean {
-	const today = new Date();
-	today.setHours(0, 0, 0, 0);
-	const dueDate = new Date(dateStr + 'T00:00:00');
-	return dueDate < today;
-}
-
-// Check if date is within advance notice period
-function isUpcoming(dateStr: string, advanceDays: number): boolean {
-	const today = new Date();
-	today.setHours(0, 0, 0, 0);
-	const dueDate = new Date(dateStr + 'T00:00:00');
-	const advanceDate = new Date(dueDate);
-	advanceDate.setDate(advanceDate.getDate() - advanceDays);
-	return today >= advanceDate && today < dueDate;
 }
 
 export function ReminderCard({
@@ -119,11 +69,11 @@ export function ReminderCard({
 			<ContextMenuTrigger asChild>
 				<div className="block cursor-default">
 					<Card className={`h-full transition-colors ${pastDue ? 'border-destructive/50 bg-destructive/5' : upcoming ? 'border-amber-500/50 bg-amber-500/5' : ''}`}>
-						<CardHeader className="space-y-2">
-							<div className="flex items-start justify-between gap-2">
-								<div className="flex items-center gap-2">
-									<Bell className={`h-5 w-5 shrink-0 ${pastDue ? 'text-destructive' : upcoming ? 'text-amber-500' : 'text-muted-foreground'}`} />
-									<CardTitle className="text-base leading-tight">
+						<CardHeader className="p-6 space-y-3">
+							<div className="flex items-start justify-between gap-3">
+								<div className="flex items-center gap-3">
+									<Bell className={`h-6 w-6 shrink-0 ${pastDue ? 'text-destructive' : upcoming ? 'text-amber-500' : 'text-muted-foreground'}`} />
+									<CardTitle className="text-lg font-semibold leading-tight">
 										{reminder.title}
 									</CardTitle>
 								</div>
@@ -138,7 +88,7 @@ export function ReminderCard({
 								)}
 							</div>
 							{reminder.description && (
-								<CardDescription className="line-clamp-2">
+								<CardDescription className="line-clamp-2 text-sm">
 									{reminder.description}
 								</CardDescription>
 							)}

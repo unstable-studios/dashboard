@@ -61,11 +61,11 @@ export function DocCard({ doc, isAdmin, isUserPinned, onEdit, onDelete, onToggle
 			<ContextMenuTrigger asChild>
 				<div onClick={handleClick} className="block cursor-pointer">
 					<Card className="h-full transition-colors hover:bg-muted/50">
-						<CardHeader className="space-y-2">
-							<div className="flex items-start justify-between gap-2">
-								<div className="flex items-center gap-2">
-									<FileText className="h-5 w-5 text-muted-foreground shrink-0" />
-									<CardTitle className="text-base leading-tight">
+						<CardHeader className="p-6 space-y-3">
+							<div className="flex items-start justify-between gap-3">
+								<div className="flex items-center gap-3">
+									<FileText className="h-6 w-6 text-muted-foreground shrink-0" />
+									<CardTitle className="text-lg font-semibold leading-tight">
 										{doc.title}
 									</CardTitle>
 									{isUserPinned && (
@@ -77,7 +77,7 @@ export function DocCard({ doc, isAdmin, isUserPinned, onEdit, onDelete, onToggle
 								)}
 							</div>
 							{doc.excerpt && (
-								<CardDescription className="line-clamp-2">
+								<CardDescription className="line-clamp-2 text-sm">
 									{doc.excerpt}
 								</CardDescription>
 							)}
