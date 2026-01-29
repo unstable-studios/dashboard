@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.6.0...echo-hub-v1.7.0) (2026-01-29)
+
+
+### Features
+
+* **auth0:** use organization login flow for internal apps ([#60](https://github.com/unstable-studios/echo-core/issues/60)) ([aa0e740](https://github.com/unstable-studios/echo-core/commit/aa0e74003aebee917c30ab16ff4c211d605d2a91))
+
 ## [1.6.0](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.5.1...echo-hub-v1.6.0) (2026-01-29)
 
 

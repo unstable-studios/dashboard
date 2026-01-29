@@ -1,7 +1,7 @@
 {
 	"name": "echo-hub",
 	"private": true,
-	"version": "1.6.0",
+	"version": "1.7.0",
 	"type": "module",
 	"description": "The Hub - Internal dashboard for Unstable Studios",
 	"dependencies": {
