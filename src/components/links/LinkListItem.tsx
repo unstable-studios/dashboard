@@ -5,6 +5,7 @@ import {
 	ContextMenuSeparator,
 	ContextMenuTrigger,
 } from '@/components/ui/context-menu';
+import { DragHandle, DragHandleProps } from '@/components/ui/sortable-list';
 import { ExternalLink, Pin, PinOff, Pencil, Trash2 } from 'lucide-react';
 import { ServiceLink } from './LinkCard';
 
@@ -15,6 +16,7 @@ interface LinkListItemProps {
 	onEdit?: (link: ServiceLink) => void;
 	onDelete?: (link: ServiceLink) => void;
 	onTogglePin?: (link: ServiceLink) => void;
+	dragHandleProps?: DragHandleProps;
 }
 
 export function LinkListItem({
@@ -24,6 +26,7 @@ export function LinkListItem({
 	onEdit,
 	onDelete,
 	onTogglePin,
+	dragHandleProps,
 }: LinkListItemProps) {
 	return (
 		<ContextMenu>
@@ -34,6 +37,7 @@ export function LinkListItem({
 					rel="noopener noreferrer"
 					className="flex items-center gap-4 p-4 rounded-lg border bg-card hover:bg-accent transition-colors"
 				>
+					<DragHandle dragHandleProps={dragHandleProps} />
 					<div className="text-2xl flex-shrink-0">
 						{link.icon || '🔗'}
 					</div>

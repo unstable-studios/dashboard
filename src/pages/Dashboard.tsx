@@ -125,14 +125,57 @@ export function Dashboard() {
 		}
 	};
 
-	// Filter to show user's pinned links, fallback to globally pinned if none
+	const handleReorderLinks = async (orderedIds: number[]) => {
+		const previousOrder = [...userFavoriteLinks];
+		setUserFavoriteLinks(orderedIds);
+		try {
+			const res = await authFetch('/api/preferences', getAccessTokenSilently, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ favorite_links: orderedIds }),
+			});
+
+			if (!res.ok) {
+				throw new Error('Failed to save link order');
+			}
+		} catch (err) {
+			console.error('Error saving link order:', err);
+			setUserFavoriteLinks(previousOrder);
+		}
+	};
+
+	const handleReorderDocs = async (orderedIds: number[]) => {
+		const previousOrder = [...userFavoriteDocs];
+		setUserFavoriteDocs(orderedIds);
+		try {
+			const res = await authFetch('/api/preferences', getAccessTokenSilently, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ favorite_docs: orderedIds }),
+			});
+
+			if (!res.ok) {
+				throw new Error('Failed to save doc order');
+			}
+		} catch (err) {
+			console.error('Error saving doc order:', err);
+			setUserFavoriteDocs(previousOrder);
+		}
+	};
+
+	// Filter and sort to show user's pinned links in their preferred order,
+	// fallback to globally pinned if none
 	const pinnedLinks =
 		userFavoriteLinks.length > 0
-			? allLinks.filter((link) => userFavoriteLinks.includes(link.id))
+			? userFavoriteLinks
+					.map((id) => allLinks.find((link) => link.id === id))
+					.filter((link): link is ServiceLink => link !== undefined)
 			: allLinks.filter((link) => link.is_pinned);
 
-	// Filter to show user's pinned docs
-	const pinnedDocs = allDocs.filter((doc) => userFavoriteDocs.includes(doc.id));
+	// Filter and sort to show user's pinned docs in their preferred order
+	const pinnedDocs = userFavoriteDocs
+		.map((id) => allDocs.find((doc) => doc.id === id))
+		.filter((doc): doc is Document => doc !== undefined);
 
 	const hasUserLinkPins = userFavoriteLinks.length > 0;
 	const hasUserDocPins = userFavoriteDocs.length > 0;
@@ -222,6 +265,7 @@ export function Dashboard() {
 									userFavorites={userFavoriteLinks}
 									viewMode={viewMode}
 									onTogglePin={handleToggleLinkPin}
+									onReorder={viewMode === 'list' && hasUserLinkPins ? handleReorderLinks : undefined}
 								/>
 							)}
 						</section>
@@ -249,6 +293,7 @@ export function Dashboard() {
 									userFavorites={userFavoriteDocs}
 									viewMode={viewMode}
 									onTogglePin={handleToggleDocPin}
+									onReorder={viewMode === 'list' && hasUserDocPins ? handleReorderDocs : undefined}
 								/>
 							</section>
 						)}

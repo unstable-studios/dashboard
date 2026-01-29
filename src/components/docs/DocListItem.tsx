@@ -6,6 +6,7 @@ import {
 	ContextMenuSeparator,
 	ContextMenuTrigger,
 } from '@/components/ui/context-menu';
+import { DragHandle, DragHandleProps } from '@/components/ui/sortable-list';
 import { FileText, ExternalLink, Pencil, Trash2, Eye, Pin, PinOff } from 'lucide-react';
 import { Document } from './DocCard';
 
@@ -16,9 +17,10 @@ interface DocListItemProps {
 	onEdit?: (doc: Document) => void;
 	onDelete?: (doc: Document) => void;
 	onTogglePin?: (doc: Document) => void;
+	dragHandleProps?: DragHandleProps;
 }
 
-export function DocListItem({ doc, isAdmin, isUserPinned, onEdit, onDelete, onTogglePin }: DocListItemProps) {
+export function DocListItem({ doc, isAdmin, isUserPinned, onEdit, onDelete, onTogglePin, dragHandleProps }: DocListItemProps) {
 	const navigate = useNavigate();
 	const isExternal = !!doc.external_url;
 
@@ -34,6 +36,7 @@ export function DocListItem({ doc, isAdmin, isUserPinned, onEdit, onDelete, onTo
 
 	const itemContent = (
 		<>
+			<DragHandle dragHandleProps={dragHandleProps} />
 			<FileText className="h-5 w-5 text-muted-foreground shrink-0" />
 			<div className="flex-1 min-w-0">
 				<div className="flex items-center gap-2">

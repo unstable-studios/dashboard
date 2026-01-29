@@ -1,5 +1,6 @@
 import { DocCard, Document } from './DocCard';
 import { DocListItem } from './DocListItem';
+import { SortableList } from '@/components/ui/sortable-list';
 import { ViewMode } from '@/hooks/useViewPreference';
 
 interface DocListProps {
@@ -11,9 +12,10 @@ interface DocListProps {
 	onEdit?: (doc: Document) => void;
 	onDelete?: (doc: Document) => void;
 	onTogglePin?: (doc: Document) => void;
+	onReorder?: (orderedIds: number[]) => void;
 }
 
-export function DocList({ documents, loading, isAdmin, userFavorites, viewMode = 'grid', onEdit, onDelete, onTogglePin }: DocListProps) {
+export function DocList({ documents, loading, isAdmin, userFavorites, viewMode = 'grid', onEdit, onDelete, onTogglePin, onReorder }: DocListProps) {
 	if (loading) {
 		if (viewMode === 'list') {
 			return (
@@ -48,6 +50,25 @@ export function DocList({ documents, loading, isAdmin, userFavorites, viewMode =
 	}
 
 	if (viewMode === 'list') {
+		if (onReorder) {
+			return (
+				<SortableList
+					items={documents}
+					onReorder={onReorder}
+					renderItem={(doc, dragHandleProps) => (
+						<DocListItem
+							doc={doc}
+							isAdmin={isAdmin}
+							isUserPinned={userFavorites?.includes(doc.id)}
+							onEdit={onEdit}
+							onDelete={onDelete}
+							onTogglePin={onTogglePin}
+							dragHandleProps={dragHandleProps}
+						/>
+					)}
+				/>
+			);
+		}
 		return (
 			<div className="space-y-2">
 				{documents.map((doc) => (

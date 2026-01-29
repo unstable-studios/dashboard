@@ -1,5 +1,6 @@
 import { LinkCard, ServiceLink } from './LinkCard';
 import { LinkListItem } from './LinkListItem';
+import { SortableList } from '@/components/ui/sortable-list';
 import { ViewMode } from '@/hooks/useViewPreference';
 
 interface LinksGridProps {
@@ -11,6 +12,7 @@ interface LinksGridProps {
 	onEdit?: (link: ServiceLink) => void;
 	onDelete?: (link: ServiceLink) => void;
 	onTogglePin?: (link: ServiceLink) => void;
+	onReorder?: (orderedIds: number[]) => void;
 }
 
 export function LinksGrid({
@@ -22,6 +24,7 @@ export function LinksGrid({
 	onEdit,
 	onDelete,
 	onTogglePin,
+	onReorder,
 }: LinksGridProps) {
 	if (loading) {
 		if (viewMode === 'list') {
@@ -57,6 +60,25 @@ export function LinksGrid({
 	}
 
 	if (viewMode === 'list') {
+		if (onReorder) {
+			return (
+				<SortableList
+					items={links}
+					onReorder={onReorder}
+					renderItem={(link, dragHandleProps) => (
+						<LinkListItem
+							link={link}
+							isAdmin={isAdmin}
+							isUserPinned={userFavorites.includes(link.id)}
+							onEdit={onEdit}
+							onDelete={onDelete}
+							onTogglePin={onTogglePin}
+							dragHandleProps={dragHandleProps}
+						/>
+					)}
+				/>
+			);
+		}
 		return (
 			<div className="space-y-2">
 				{links.map((link) => (
