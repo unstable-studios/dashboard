@@ -6,12 +6,30 @@ INSERT OR IGNORE INTO categories (name, slug, icon, color, sort_order) VALUES
   ('Operations', 'ops', '⚙️', 'orange', 4),
   ('Communication', 'comms', '💬', 'cyan', 5);
 
--- Example service links (idempotent: ignore if url already exists)
-INSERT OR IGNORE INTO service_links (title, description, url, icon, category_id, is_pinned, sort_order) VALUES
-  ('QuickBooks', 'Accounting & invoicing', 'https://quickbooks.intuit.com', '📊', 1, 1, 1),
-  ('Gusto', 'Payroll & benefits', 'https://gusto.com', '💵', 2, 1, 1),
-  ('GitHub', 'Code repositories', 'https://github.com/unstable-studios', '🐙', 3, 1, 1),
-  ('Slack', 'Team communication', 'https://unstablestudios.slack.com', '💬', 5, 1, 1);
+-- Example service links (idempotent: skip if url already exists)
+INSERT INTO service_links (title, description, url, icon, category_id, is_pinned, sort_order)
+SELECT 'QuickBooks', 'Accounting & invoicing', 'https://quickbooks.intuit.com', '📊', 1, 1, 1
+WHERE NOT EXISTS (
+  SELECT 1 FROM service_links WHERE url = 'https://quickbooks.intuit.com'
+);
+
+INSERT INTO service_links (title, description, url, icon, category_id, is_pinned, sort_order)
+SELECT 'Gusto', 'Payroll & benefits', 'https://gusto.com', '💵', 2, 1, 1
+WHERE NOT EXISTS (
+  SELECT 1 FROM service_links WHERE url = 'https://gusto.com'
+);
+
+INSERT INTO service_links (title, description, url, icon, category_id, is_pinned, sort_order)
+SELECT 'GitHub', 'Code repositories', 'https://github.com/unstable-studios', '🐙', 3, 1, 1
+WHERE NOT EXISTS (
+  SELECT 1 FROM service_links WHERE url = 'https://github.com/unstable-studios'
+);
+
+INSERT INTO service_links (title, description, url, icon, category_id, is_pinned, sort_order)
+SELECT 'Slack', 'Team communication', 'https://unstablestudios.slack.com', '💬', 5, 1, 1
+WHERE NOT EXISTS (
+  SELECT 1 FROM service_links WHERE url = 'https://unstablestudios.slack.com'
+);
 
 -- Initial admin (idempotent: ignore if email already exists)
 INSERT OR IGNORE INTO admin_users (email, added_by) VALUES
