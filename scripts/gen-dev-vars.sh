@@ -15,4 +15,5 @@ echo "# Auto-generated from Doppler - do not commit" > .env
 echo "VITE_AUTH0_DOMAIN=$AUTH0_DOMAIN" >> .env
 echo "VITE_AUTH0_CLIENT_ID=$AUTH0_CLIENT_ID" >> .env
 echo "VITE_AUTH0_AUDIENCE=$AUTH0_AUDIENCE" >> .env
+echo "VITE_AUTH0_ORGANIZATION=$AUTH0_ORGANIZATION" >> .env
 echo "Generated .env from Doppler"

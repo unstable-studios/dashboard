@@ -56,6 +56,7 @@ export const auth0Config = {
 		redirect_uri: `${window.location.origin}/callback`,
 		audience: import.meta.env.VITE_AUTH0_AUDIENCE,
 		scope: SCOPES,
+		organization: import.meta.env.VITE_AUTH0_ORGANIZATION,
 	},
 };
 
