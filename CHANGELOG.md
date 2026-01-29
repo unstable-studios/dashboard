@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.3.3...echo-hub-v1.4.0) (2026-01-29)
+
+
+### Features
+
+* **echo-hub:** add automatic D1 migrations to CI/CD ([#43](https://github.com/unstable-studios/echo-core/issues/43)) ([42096cc](https://github.com/unstable-studios/echo-core/commit/42096cc86a8da018bc54073bc6646f5ec7541ada))
+
 ## [1.3.3](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.3.2...echo-hub-v1.3.3) (2026-01-29)
 
 
