@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.4.0...echo-hub-v1.5.0) (2026-01-29)
+
+
+### Features
+
+* **echo-hub:** UX improvements with view toggle and dashboard reminders ([#48](https://github.com/unstable-studios/echo-core/issues/48)) ([8d7670f](https://github.com/unstable-studios/echo-core/commit/8d7670f81e9ae77da83ac18c7706a4daecb11f40))
+
 ## [1.4.0](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.3.3...echo-hub-v1.4.0) (2026-01-29)
 
 
