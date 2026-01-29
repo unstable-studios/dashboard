@@ -174,18 +174,29 @@ calendar.get('/feed', async (c) => {
 	const protocol = host.includes('localhost') ? 'http' : 'https';
 	const baseUrl = `${protocol}://${host}`;
 
-	// Build iCal content
+	// Build iCal content (RFC 5545 compliant)
 	const lines: string[] = [
 		'BEGIN:VCALENDAR',
 		'VERSION:2.0',
 		'PRODID:-//Echo Hub//Calendar//EN',
-		'X-WR-CALNAME:Echo Hub Reminders',
+		'CALSCALE:GREGORIAN',
 		'METHOD:PUBLISH',
+		'X-WR-CALNAME:Echo Hub Reminders',
+		'REFRESH-INTERVAL;VALUE=DURATION:PT1H',
+		'X-PUBLISHED-TTL:PT1H',
 	];
+
+	// Current timestamp for DTSTAMP fallback
+	const nowStamp = formatICalDateTime(new Date().toISOString());
 
 	for (const reminder of reminders) {
 		const uid = `reminder-${reminder.id}@hub.unstablestudios.com`;
 		const dtstart = formatICalDate(reminder.next_due);
+
+		// Calculate DTEND (next day for all-day events)
+		const startDate = new Date(reminder.next_due + 'T00:00:00Z');
+		startDate.setUTCDate(startDate.getUTCDate() + 1);
+		const dtend = startDate.toISOString().slice(0, 10).replace(/-/g, '');
 
 		// Build description
 		let description = escapeICalText(reminder.description);
@@ -197,10 +208,16 @@ calendar.get('/feed', async (c) => {
 			description += `Document: ${docUrl}`;
 		}
 
+		// Use updated_at if available, otherwise current time
+		const dtstamp = reminder.updated_at
+			? formatICalDateTime(reminder.updated_at)
+			: nowStamp;
+
 		lines.push('BEGIN:VEVENT');
 		lines.push(foldLine(`UID:${uid}`));
-		lines.push(`DTSTAMP:${formatICalDateTime(reminder.updated_at)}`);
+		lines.push(`DTSTAMP:${dtstamp}`);
 		lines.push(`DTSTART;VALUE=DATE:${dtstart}`);
+		lines.push(`DTEND;VALUE=DATE:${dtend}`);
 		lines.push(foldLine(`SUMMARY:${escapeICalText(reminder.title)}`));
 
 		if (description) {
@@ -227,12 +244,14 @@ calendar.get('/feed', async (c) => {
 
 	lines.push('END:VCALENDAR');
 
-	const icalContent = lines.join('\r\n');
+	// Join with CRLF and ensure file ends with CRLF (RFC 5545 requirement)
+	const icalContent = lines.join('\r\n') + '\r\n';
 
 	return new Response(icalContent, {
 		headers: {
 			'Content-Type': 'text/calendar; charset=utf-8',
-			'Content-Disposition': 'attachment; filename="echo-hub-reminders.ics"',
+			// No Content-Disposition header - allows calendar apps to subscribe instead of download
+			'Cache-Control': 'no-cache, no-store, must-revalidate',
 		},
 	});
 });
