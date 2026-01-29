@@ -128,9 +128,13 @@ export function ReminderCard({
 									</CardTitle>
 								</div>
 								{isGlobal ? (
-									<Globe className="h-4 w-4 text-muted-foreground shrink-0" title="Organization-wide" />
+									<span title="Organization-wide">
+										<Globe className="h-4 w-4 text-muted-foreground shrink-0" />
+									</span>
 								) : (
-									<User className="h-4 w-4 text-muted-foreground shrink-0" title="Personal" />
+									<span title="Personal">
+										<User className="h-4 w-4 text-muted-foreground shrink-0" />
+									</span>
 								)}
 							</div>
 							{reminder.description && (
