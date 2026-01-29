@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.0](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.8.0...echo-hub-v1.9.0) (2026-01-29)
+
+
+### Features
+
+* **echo-hub:** add drag-and-drop reordering for pinned items ([#67](https://github.com/unstable-studios/echo-core/issues/67)) ([c54ca1d](https://github.com/unstable-studios/echo-core/commit/c54ca1d3c269520dc134d5a05f00b91469bf1e30))
+
 ## [1.8.0](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.7.0...echo-hub-v1.8.0) (2026-01-29)
 
 
