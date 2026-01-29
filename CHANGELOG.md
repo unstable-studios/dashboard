@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.7.0...echo-hub-v1.8.0) (2026-01-29)
+
+
+### Features
+
+* **echo-hub:** polish login page design ([#65](https://github.com/unstable-studios/echo-core/issues/65)) ([7d2b219](https://github.com/unstable-studios/echo-core/commit/7d2b219158ec1d1ac07275cadc185a5d79b3f81c))
+
 ## [1.7.0](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.6.0...echo-hub-v1.7.0) (2026-01-29)
 
 
