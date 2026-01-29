@@ -12,11 +12,23 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { authFetch } from '@/lib/auth';
 import { Reminder, CalendarPermissions } from './ReminderCard';
+import { DocumentCombobox } from './DocumentCombobox';
 
-interface Document {
+export interface Document {
 	id: number;
 	title: string;
 	slug: string;
+	category_name?: string | null;
+	category_slug?: string | null;
+}
+
+const LIMITS = { title: 100, description: 500 } as const;
+
+// Helper function to get character counter color class
+function getCounterColorClass(length: number, limit: number): string {
+	if (length >= limit) return 'text-destructive';
+	if (length >= limit * 0.8) return 'text-amber-600';
+	return 'text-muted-foreground';
 }
 
 // Recurrence presets that generate RRULE strings
@@ -185,11 +197,15 @@ export function ReminderDialog({
 						<Input
 							id="title"
 							value={title}
-							onChange={(e) => setTitle(e.target.value)}
+							onChange={(e) => setTitle(e.target.value.slice(0, LIMITS.title))}
 							placeholder="e.g., Quarterly tax filing"
+							maxLength={LIMITS.title}
 							required
 							disabled={!canEdit}
 						/>
+						<div className={`text-xs text-right ${getCounterColorClass(title.length, LIMITS.title)}`}>
+							{title.length}/{LIMITS.title}
+						</div>
 					</div>
 
 					<div className="space-y-2">
@@ -197,10 +213,14 @@ export function ReminderDialog({
 						<Input
 							id="description"
 							value={description}
-							onChange={(e) => setDescription(e.target.value)}
+							onChange={(e) => setDescription(e.target.value.slice(0, LIMITS.description))}
 							placeholder="Additional details"
+							maxLength={LIMITS.description}
 							disabled={!canEdit}
 						/>
+						<div className={`text-xs text-right ${getCounterColorClass(description.length, LIMITS.description)}`}>
+							{description.length}/{LIMITS.description}
+						</div>
 					</div>
 
 					<div className="grid grid-cols-2 gap-4">
@@ -249,23 +269,13 @@ export function ReminderDialog({
 						</div>
 
 						<div className="space-y-2">
-							<Label htmlFor="document">Linked Document</Label>
-							<select
-								id="document"
+							<Label>Linked Document</Label>
+							<DocumentCombobox
+								documents={documents}
 								value={docId}
-								onChange={(e) =>
-									setDocId(e.target.value ? Number(e.target.value) : '')
-								}
-								className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm"
+								onChange={setDocId}
 								disabled={!canEdit}
-							>
-								<option value="">No document</option>
-								{documents.map((doc) => (
-									<option key={doc.id} value={doc.id}>
-										{doc.title}
-									</option>
-								))}
-							</select>
+							/>
 						</div>
 					</div>
 

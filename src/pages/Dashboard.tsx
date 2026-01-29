@@ -6,7 +6,11 @@ import { LinksGrid } from '@/components/links/LinksGrid';
 import { ServiceLink } from '@/components/links/LinkCard';
 import { DocList } from '@/components/docs/DocList';
 import { Document } from '@/components/docs/DocCard';
-import { ReminderCard, Reminder, CalendarPermissions } from '@/components/calendar/ReminderCard';
+import {
+	Reminder,
+	CalendarPermissions,
+} from '@/components/calendar/ReminderCard';
+import { ReminderGrid } from '@/components/calendar/ReminderGrid';
 import { Button } from '@/components/ui/button';
 import { ViewToggle } from '@/components/ui/view-toggle';
 import { authFetch } from '@/lib/auth';
@@ -30,7 +34,8 @@ export function Dashboard() {
 	const [allLinks, setAllLinks] = useState<ServiceLink[]>([]);
 	const [allDocs, setAllDocs] = useState<Document[]>([]);
 	const [reminders, setReminders] = useState<Reminder[]>([]);
-	const [calendarPermissions, setCalendarPermissions] = useState<CalendarPermissions>(DEFAULT_PERMISSIONS);
+	const [calendarPermissions, setCalendarPermissions] =
+		useState<CalendarPermissions>(DEFAULT_PERMISSIONS);
 	const [currentUserId, setCurrentUserId] = useState('');
 	const [userFavoriteLinks, setUserFavoriteLinks] = useState<number[]>([]);
 	const [userFavoriteDocs, setUserFavoriteDocs] = useState<number[]>([]);
@@ -39,25 +44,29 @@ export function Dashboard() {
 
 	const fetchData = async () => {
 		try {
-			const [linksRes, docsRes, prefsRes, remindersRes, meRes] = await Promise.all([
-				authFetch('/api/links', getAccessTokenSilently),
-				authFetch('/api/docs', getAccessTokenSilently),
-				authFetch('/api/preferences', getAccessTokenSilently),
-				authFetch('/api/reminders', getAccessTokenSilently),
-				authFetch('/api/auth/me', getAccessTokenSilently),
-			]);
+			const [linksRes, docsRes, prefsRes, remindersRes, meRes] =
+				await Promise.all([
+					authFetch('/api/links', getAccessTokenSilently),
+					authFetch('/api/docs', getAccessTokenSilently),
+					authFetch('/api/preferences', getAccessTokenSilently),
+					authFetch('/api/reminders', getAccessTokenSilently),
+					authFetch('/api/auth/me', getAccessTokenSilently),
+				]);
 
 			if (!linksRes.ok) {
 				throw new Error('Failed to fetch links');
 			}
 
-			const [linksData, docsData, prefsData, remindersData, meData] = await Promise.all([
-				linksRes.json(),
-				docsRes.ok ? docsRes.json() : { documents: [] },
-				prefsRes.ok ? prefsRes.json() : { preferences: { favorite_links: [], favorite_docs: [] } },
-				remindersRes.ok ? remindersRes.json() : { reminders: [] },
-				meRes.ok ? meRes.json() : { calendar: DEFAULT_PERMISSIONS, sub: '' },
-			]);
+			const [linksData, docsData, prefsData, remindersData, meData] =
+				await Promise.all([
+					linksRes.json(),
+					docsRes.ok ? docsRes.json() : { documents: [] },
+					prefsRes.ok
+						? prefsRes.json()
+						: { preferences: { favorite_links: [], favorite_docs: [] } },
+					remindersRes.ok ? remindersRes.json() : { reminders: [] },
+					meRes.ok ? meRes.json() : { calendar: DEFAULT_PERMISSIONS, sub: '' },
+				]);
 
 			setAllLinks(linksData.links);
 			setAllDocs(docsData.documents || []);
@@ -117,9 +126,10 @@ export function Dashboard() {
 	};
 
 	// Filter to show user's pinned links, fallback to globally pinned if none
-	const pinnedLinks = userFavoriteLinks.length > 0
-		? allLinks.filter((link) => userFavoriteLinks.includes(link.id))
-		: allLinks.filter((link) => link.is_pinned);
+	const pinnedLinks =
+		userFavoriteLinks.length > 0
+			? allLinks.filter((link) => userFavoriteLinks.includes(link.id))
+			: allLinks.filter((link) => link.is_pinned);
 
 	// Filter to show user's pinned docs
 	const pinnedDocs = allDocs.filter((doc) => userFavoriteDocs.includes(doc.id));
@@ -130,50 +140,79 @@ export function Dashboard() {
 	// Filter for upcoming reminders (within advance notice or past due), limit to 6
 	const upcomingReminders = reminders
 		.filter((r) => isUpcomingOrPastDue(r.next_due, r.advance_notice_days))
-		.sort((a, b) => new Date(a.next_due).getTime() - new Date(b.next_due).getTime())
+		.sort(
+			(a, b) => new Date(a.next_due).getTime() - new Date(b.next_due).getTime()
+		)
 		.slice(0, 6);
 
 	return (
 		<AppShell>
-			<div className="space-y-8">
-				<div className="flex items-center justify-between">
+			<div className='space-y-8'>
+				<div className='flex items-center justify-between'>
 					<div>
-						<h1 className="text-2xl font-bold">Dashboard</h1>
-						<p className="text-muted-foreground">
-							Quick access to your most used services and documents
-						</p>
+						<h1 className='text-2xl font-bold'>Dashboard</h1>
 					</div>
 					<ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
 				</div>
 
 				{error ? (
-					<div className="text-destructive">{error}</div>
+					<div className='text-destructive'>{error}</div>
 				) : (
 					<>
+						{/* Upcoming Reminders Section */}
+						{!loading && upcomingReminders.length > 0 && (
+							<section>
+								<div className='mb-4 flex items-center justify-between'>
+									<h2 className='flex items-center gap-2 text-lg font-semibold'>
+										<Bell className='h-4 w-4' />
+										Upcoming Reminders
+									</h2>
+									<Link to='/calendar'>
+										<Button variant='ghost' size='sm'>
+											View All
+										</Button>
+									</Link>
+								</div>
+
+								<ReminderGrid
+									reminders={upcomingReminders}
+									loading={false}
+									currentUserId={currentUserId}
+									permissions={calendarPermissions}
+									viewMode={viewMode}
+								/>
+							</section>
+						)}
+
 						{/* Pinned Links Section */}
 						<section>
-							<div className="flex items-center justify-between mb-4">
-								<h2 className="text-lg font-semibold flex items-center gap-2">
-									<Pin className="h-4 w-4" />
-									{hasUserLinkPins ? 'Your Pinned Links' : 'Suggested Links'}
+							<div className='mb-4 flex items-center justify-between'>
+								<h2 className='flex items-center gap-2 text-lg font-semibold'>
+									<Pin className='h-4 w-4' />
+									{hasUserLinkPins ? 'Pinned Links' : 'Suggested Links'}
 								</h2>
 								{!hasUserLinkPins && !loading && pinnedLinks.length > 0 && (
-									<p className="text-sm text-muted-foreground">
+									<p className='text-muted-foreground text-sm'>
 										Right-click any link to pin your favorites
 									</p>
+								)}
+								{hasUserLinkPins && !loading && pinnedLinks.length > 0 && (
+									<Link to='/links'>
+										<Button variant='ghost' size='sm'>
+											View All
+										</Button>
+									</Link>
 								)}
 							</div>
 
 							{!loading && pinnedLinks.length === 0 ? (
-								<div className="text-center py-12 border rounded-lg bg-muted/30">
-									<Pin className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
-									<p className="text-muted-foreground mb-4">
+								<div className='bg-muted/30 rounded-lg border py-12 text-center'>
+									<Pin className='text-muted-foreground mx-auto mb-3 h-8 w-8' />
+									<p className='text-muted-foreground mb-4'>
 										No pinned links yet
 									</p>
-									<Link to="/links">
-										<Button variant="outline">
-											Browse Links to Pin
-										</Button>
+									<Link to='/links'>
+										<Button variant='outline'>Browse Links to Pin</Button>
 									</Link>
 								</div>
 							) : (
@@ -190,11 +229,18 @@ export function Dashboard() {
 						{/* Pinned Documents Section */}
 						{(hasUserDocPins || loading) && (
 							<section>
-								<div className="flex items-center justify-between mb-4">
-									<h2 className="text-lg font-semibold flex items-center gap-2">
-										<FileText className="h-4 w-4" />
+								<div className='mb-4 flex items-center justify-between'>
+									<h2 className='flex items-center gap-2 text-lg font-semibold'>
+										<FileText className='h-4 w-4' />
 										Pinned Documents
 									</h2>
+									{!loading && pinnedDocs.length > 0 && (
+										<Link to='/docs'>
+											<Button variant='ghost' size='sm'>
+												View All
+											</Button>
+										</Link>
+									)}
 								</div>
 
 								<DocList
@@ -204,34 +250,6 @@ export function Dashboard() {
 									viewMode={viewMode}
 									onTogglePin={handleToggleDocPin}
 								/>
-							</section>
-						)}
-
-						{/* Upcoming Reminders Section */}
-						{!loading && upcomingReminders.length > 0 && (
-							<section>
-								<div className="flex items-center justify-between mb-4">
-									<h2 className="text-lg font-semibold flex items-center gap-2">
-										<Bell className="h-4 w-4" />
-										Upcoming Reminders
-									</h2>
-									<Link to="/calendar">
-										<Button variant="ghost" size="sm">
-											View All
-										</Button>
-									</Link>
-								</div>
-
-								<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-									{upcomingReminders.map((reminder) => (
-										<ReminderCard
-											key={reminder.id}
-											reminder={reminder}
-											currentUserId={currentUserId}
-											permissions={calendarPermissions}
-										/>
-									))}
-								</div>
 							</section>
 						)}
 					</>

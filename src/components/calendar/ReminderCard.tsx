@@ -79,8 +79,8 @@ export function ReminderCard({
 					<Card className={`h-full transition-colors ${pastDue ? 'border-destructive/50 bg-destructive/5' : upcoming ? 'border-amber-500/50 bg-amber-500/5' : ''}`}>
 						<CardHeader className="p-6 space-y-3">
 							<div className="flex items-start justify-between gap-3">
-								<div className="flex items-center gap-3">
-									<Bell className={`h-6 w-6 shrink-0 ${pastDue ? 'text-destructive' : upcoming ? 'text-amber-500' : 'text-muted-foreground'}`} />
+								<div className="flex items-start gap-3 min-w-0">
+									<Bell className={`h-6 w-6 shrink-0 mt-0.5 ${pastDue ? 'text-destructive' : upcoming ? 'text-amber-500' : 'text-muted-foreground'}`} />
 									<CardTitle className="text-lg font-semibold leading-tight">
 										{reminder.title}
 									</CardTitle>

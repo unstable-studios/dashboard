@@ -11,6 +11,8 @@ import { Label } from '@/components/ui/label';
 import { authFetch } from '@/lib/auth';
 import { ArrowLeft, Eye, Save } from 'lucide-react';
 
+const LIMITS = { title: 100, excerpt: 500 } as const;
+
 interface Category {
 	id: number;
 	name: string;
@@ -135,7 +137,7 @@ export function DocEditor() {
 	if (loading) {
 		return (
 			<AppShell>
-				<div className="space-y-4 max-w-4xl">
+				<div className="space-y-4 max-w-4xl mx-auto">
 					<div className="h-8 w-48 bg-muted animate-pulse rounded" />
 					<div className="h-10 bg-muted animate-pulse rounded" />
 					<div className="h-64 bg-muted animate-pulse rounded" />
@@ -146,7 +148,7 @@ export function DocEditor() {
 
 	return (
 		<AppShell>
-			<div className="max-w-4xl">
+			<div className="max-w-4xl mx-auto">
 				<div className="mb-6">
 					<Link to="/docs">
 						<Button variant="ghost" size="sm" className="gap-2 -ml-2">
@@ -172,10 +174,14 @@ export function DocEditor() {
 							<Input
 								id="title"
 								value={title}
-								onChange={(e) => setTitle(e.target.value)}
+								onChange={(e) => setTitle(e.target.value.slice(0, LIMITS.title))}
 								placeholder="Document title"
+								maxLength={LIMITS.title}
 								required
 							/>
+							<div className={`text-xs text-right ${title.length >= LIMITS.title ? 'text-destructive' : title.length >= LIMITS.title * 0.8 ? 'text-amber-600' : 'text-muted-foreground'}`}>
+								{title.length}/{LIMITS.title}
+							</div>
 						</div>
 
 						<div className="space-y-2">
@@ -228,9 +234,13 @@ export function DocEditor() {
 						<Input
 							id="excerpt"
 							value={excerpt}
-							onChange={(e) => setExcerpt(e.target.value)}
+							onChange={(e) => setExcerpt(e.target.value.slice(0, LIMITS.excerpt))}
 							placeholder="Brief description for listings"
+							maxLength={LIMITS.excerpt}
 						/>
+						<div className={`text-xs text-right ${excerpt.length >= LIMITS.excerpt ? 'text-destructive' : excerpt.length >= LIMITS.excerpt * 0.8 ? 'text-amber-600' : 'text-muted-foreground'}`}>
+							{excerpt.length}/{LIMITS.excerpt}
+						</div>
 					</div>
 
 					{!externalUrl && (

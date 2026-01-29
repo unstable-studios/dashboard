@@ -14,6 +14,12 @@ import {
 // RRULE validation: must start with FREQ= and contain only safe characters
 const RRULE_PATTERN = /^FREQ=(DAILY|WEEKLY|MONTHLY|YEARLY)(;[A-Z]+=[A-Za-z0-9,]+)*$/;
 
+// Character limits for reminder fields
+const CHAR_LIMITS = {
+	title: 100,
+	description: 500,
+} as const;
+
 function isValidRRule(rrule: string): boolean {
 	return RRULE_PATTERN.test(rrule);
 }
@@ -21,6 +27,20 @@ function isValidRRule(rrule: string): boolean {
 // Validate advance_notice_days is within reasonable bounds
 function isValidAdvanceNoticeDays(days: number): boolean {
 	return Number.isInteger(days) && days >= 0 && days <= 365;
+}
+
+// Validate character limits for title and description
+function validateCharacterLimits(
+	title: string | undefined,
+	description: string | undefined
+): string | null {
+	if (title && title.length > CHAR_LIMITS.title) {
+		return `Title must not exceed ${CHAR_LIMITS.title} characters`;
+	}
+	if (description && description.length > CHAR_LIMITS.description) {
+		return `Description must not exceed ${CHAR_LIMITS.description} characters`;
+	}
+	return null;
 }
 
 interface Variables {
@@ -92,6 +112,12 @@ reminders.post('/', authMiddleware(), calendarAddMiddleware(), async (c) => {
 
 	if (!body.title || !body.next_due) {
 		return c.json({ error: 'Title and next_due are required' }, 400);
+	}
+
+	// Validate character limits
+	const charLimitError = validateCharacterLimits(body.title, body.description);
+	if (charLimitError) {
+		return c.json({ error: charLimitError }, 400);
 	}
 
 	// Check permissions based on is_global flag
@@ -213,6 +239,12 @@ reminders.put(
 					403
 				);
 			}
+		}
+
+		// Validate character limits
+		const charLimitError = validateCharacterLimits(body.title, body.description);
+		if (charLimitError) {
+			return c.json({ error: charLimitError }, 400);
 		}
 
 		// Validate date format if provided

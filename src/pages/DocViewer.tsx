@@ -11,6 +11,7 @@ import { ArrowLeft, Edit, ExternalLink, Trash2, Paperclip } from 'lucide-react';
 import { Document } from '@/components/docs/DocCard';
 import { AttachmentList, Attachment } from '@/components/docs/AttachmentList';
 import { AttachmentUpload } from '@/components/docs/AttachmentUpload';
+import { VersionHistory } from '@/components/docs/VersionHistory';
 
 export function DocViewer() {
 	const { slug } = useParams<{ slug: string }>();
@@ -230,7 +231,7 @@ export function DocViewer() {
 
 	return (
 		<AppShell>
-			<article className="max-w-4xl">
+			<article className="max-w-4xl mx-auto">
 				{/* Header */}
 				<div className="mb-8 space-y-4">
 					<Link to="/docs">
@@ -320,6 +321,9 @@ export function DocViewer() {
 						})}
 					</p>
 				</div>
+
+				{/* Version History */}
+				<VersionHistory documentSlug={document.slug} />
 			</article>
 		</AppShell>
 	);

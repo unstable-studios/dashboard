@@ -14,6 +14,8 @@ import { EmojiPicker } from '@/components/ui/emoji-picker';
 import { authFetch } from '@/lib/auth';
 import { ServiceLink } from './LinkCard';
 
+const LIMITS = { title: 100, description: 500 } as const;
+
 interface Category {
 	id: number;
 	name: string;
@@ -151,10 +153,14 @@ export function LinkDialog({
 						<Input
 							id="title"
 							value={title}
-							onChange={(e) => setTitle(e.target.value)}
+							onChange={(e) => setTitle(e.target.value.slice(0, LIMITS.title))}
 							placeholder="Service name"
+							maxLength={LIMITS.title}
 							required
 						/>
+						<div className={`text-xs text-right ${title.length >= LIMITS.title ? 'text-destructive' : title.length >= LIMITS.title * 0.8 ? 'text-amber-600' : 'text-muted-foreground'}`}>
+							{title.length}/{LIMITS.title}
+						</div>
 					</div>
 
 					<div className="space-y-2">
@@ -174,9 +180,13 @@ export function LinkDialog({
 						<Input
 							id="description"
 							value={description}
-							onChange={(e) => setDescription(e.target.value)}
+							onChange={(e) => setDescription(e.target.value.slice(0, LIMITS.description))}
 							placeholder="Brief description"
+							maxLength={LIMITS.description}
 						/>
+						<div className={`text-xs text-right ${description.length >= LIMITS.description ? 'text-destructive' : description.length >= LIMITS.description * 0.8 ? 'text-amber-600' : 'text-muted-foreground'}`}>
+							{description.length}/{LIMITS.description}
+						</div>
 					</div>
 
 					<div className="grid grid-cols-2 gap-4">

@@ -16,6 +16,8 @@ interface Document {
 	id: number;
 	title: string;
 	slug: string;
+	category_name?: string | null;
+	category_slug?: string | null;
 }
 
 const DEFAULT_PERMISSIONS: CalendarPermissions = {

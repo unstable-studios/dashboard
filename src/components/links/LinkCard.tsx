@@ -55,12 +55,12 @@ export function LinkCard({
 									{link.icon || '🔗'}
 								</div>
 								<div className="flex-1 min-w-0">
-									<div className="flex items-center gap-2">
-										<h3 className="text-lg font-semibold truncate">{link.title}</h3>
+									<div className="flex items-start gap-2">
+										<h3 className="text-lg font-semibold leading-tight">{link.title}</h3>
 										{isUserPinned && (
-											<Pin className="h-3 w-3 text-primary flex-shrink-0" />
+											<Pin className="h-3 w-3 text-primary flex-shrink-0 mt-1.5" />
 										)}
-										<ExternalLink className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+										<ExternalLink className="h-3 w-3 text-muted-foreground flex-shrink-0 mt-1.5" />
 									</div>
 									{link.description && (
 										<p className="text-sm text-muted-foreground mt-2 line-clamp-2">

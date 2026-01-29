@@ -165,6 +165,30 @@ docs.put('/:slug', authMiddleware(), docsEditMiddleware(), async (c) => {
 	}
 
 	try {
+		// Snapshot current version before updating
+		const maxVersion = await c.env.DB.prepare(
+			'SELECT COALESCE(MAX(version_number), 0) as max_version FROM document_versions WHERE document_id = ?'
+		)
+			.bind(existing.id)
+			.first<{ max_version: number }>();
+
+		const nextVersion = (maxVersion?.max_version || 0) + 1;
+
+		await c.env.DB.prepare(
+			`INSERT INTO document_versions (document_id, version_number, title, content, excerpt, created_by)
+			 VALUES (?, ?, ?, ?, ?, ?)`
+		)
+			.bind(
+				existing.id,
+				nextVersion,
+				existing.title,
+				existing.content,
+				existing.excerpt,
+				user.email
+			)
+			.run();
+
+		// Now update the document
 		await c.env.DB.prepare(
 			`UPDATE documents SET
 				title = ?, slug = ?, content = ?, excerpt = ?,
@@ -203,6 +227,78 @@ docs.put('/:slug', authMiddleware(), docsEditMiddleware(), async (c) => {
 		}
 		throw error;
 	}
+});
+
+// List document versions
+docs.get('/:slug/versions', authMiddleware(), docsReadMiddleware(), async (c) => {
+	const slug = c.req.param('slug');
+
+	const doc = await c.env.DB.prepare('SELECT id, is_published FROM documents WHERE slug = ?')
+		.bind(slug)
+		.first<{ id: number; is_published: number }>();
+
+	if (!doc) {
+		return c.json({ error: 'Document not found' }, 404);
+	}
+
+	// Check unpublished access
+	if (!doc.is_published) {
+		const user = c.get('user');
+		if (!canReadUnpublishedDocs(user.permissions)) {
+			return c.json({ error: 'Document not found' }, 404);
+		}
+	}
+
+	const { results } = await c.env.DB.prepare(
+		`SELECT version_number, title, created_by, created_at
+		 FROM document_versions
+		 WHERE document_id = ?
+		 ORDER BY version_number DESC`
+	)
+		.bind(doc.id)
+		.all();
+
+	return c.json({ versions: results });
+});
+
+// Get specific document version
+docs.get('/:slug/versions/:versionNumber', authMiddleware(), docsReadMiddleware(), async (c) => {
+	const slug = c.req.param('slug');
+	const versionNumber = parseInt(c.req.param('versionNumber'), 10);
+
+	if (isNaN(versionNumber)) {
+		return c.json({ error: 'Invalid version number' }, 400);
+	}
+
+	const doc = await c.env.DB.prepare('SELECT id, is_published FROM documents WHERE slug = ?')
+		.bind(slug)
+		.first<{ id: number; is_published: number }>();
+
+	if (!doc) {
+		return c.json({ error: 'Document not found' }, 404);
+	}
+
+	// Check unpublished access
+	if (!doc.is_published) {
+		const user = c.get('user');
+		if (!canReadUnpublishedDocs(user.permissions)) {
+			return c.json({ error: 'Document not found' }, 404);
+		}
+	}
+
+	const version = await c.env.DB.prepare(
+		`SELECT version_number, title, content, excerpt, created_by, created_at
+		 FROM document_versions
+		 WHERE document_id = ? AND version_number = ?`
+	)
+		.bind(doc.id, versionNumber)
+		.first();
+
+	if (!version) {
+		return c.json({ error: 'Version not found' }, 404);
+	}
+
+	return c.json({ version });
 });
 
 // Delete document (requires docs:delete)

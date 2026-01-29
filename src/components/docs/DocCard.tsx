@@ -63,14 +63,18 @@ export function DocCard({ doc, isAdmin, isUserPinned, onEdit, onDelete, onToggle
 					<Card className="h-full transition-colors hover:bg-muted/50">
 						<CardHeader className="p-6 space-y-3">
 							<div className="flex items-start justify-between gap-3">
-								<div className="flex items-center gap-3">
-									<FileText className="h-6 w-6 text-muted-foreground shrink-0" />
-									<CardTitle className="text-lg font-semibold leading-tight">
-										{doc.title}
-									</CardTitle>
-									{isUserPinned && (
-										<Pin className="h-3 w-3 text-primary shrink-0" />
-									)}
+								<div className="flex items-start gap-3 min-w-0">
+									<FileText className="h-6 w-6 text-muted-foreground shrink-0 mt-0.5" />
+									<div className="min-w-0">
+										<div className="flex items-start gap-2">
+											<CardTitle className="text-lg font-semibold leading-tight">
+												{doc.title}
+											</CardTitle>
+											{isUserPinned && (
+												<Pin className="h-3 w-3 text-primary shrink-0 mt-1.5" />
+											)}
+										</div>
+									</div>
 								</div>
 								{isExternal && (
 									<ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />
