@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.3](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.3.2...echo-hub-v1.3.3) (2026-01-29)
+
+
+### Bug Fixes
+
+* **echo-hub:** fix calendar.ics routing and SPA fallback ([#45](https://github.com/unstable-studios/echo-core/issues/45)) ([8b013a8](https://github.com/unstable-studios/echo-core/commit/8b013a80b3ec18b1be2f20d422fbdf76ea57bf43))
+
 ## [1.3.2](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.3.1...echo-hub-v1.3.2) (2026-01-29)
 
 
