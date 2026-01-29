@@ -1,5 +1,5 @@
 -- File attachments for documents
-CREATE TABLE attachments (
+CREATE TABLE IF NOT EXISTS attachments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   document_id INTEGER REFERENCES documents(id) ON DELETE CASCADE,
   filename TEXT NOT NULL,
@@ -11,4 +11,4 @@ CREATE TABLE attachments (
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_attachments_document ON attachments(document_id);
+CREATE INDEX IF NOT EXISTS idx_attachments_document ON attachments(document_id);

@@ -1,5 +1,5 @@
 -- Categories for organizing links and documents
-CREATE TABLE categories (
+CREATE TABLE IF NOT EXISTS categories (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   slug TEXT NOT NULL UNIQUE,
@@ -11,7 +11,7 @@ CREATE TABLE categories (
 );
 
 -- Service links (bookmarks to external services)
-CREATE TABLE service_links (
+CREATE TABLE IF NOT EXISTS service_links (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   title TEXT NOT NULL,
   description TEXT,
@@ -26,7 +26,7 @@ CREATE TABLE service_links (
 );
 
 -- Business process documents
-CREATE TABLE documents (
+CREATE TABLE IF NOT EXISTS documents (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   title TEXT NOT NULL,
   slug TEXT NOT NULL UNIQUE,
@@ -43,14 +43,14 @@ CREATE TABLE documents (
 );
 
 -- Admin users (email allowlist)
-CREATE TABLE admin_users (
+CREATE TABLE IF NOT EXISTS admin_users (
   email TEXT PRIMARY KEY,
   added_by TEXT,
   added_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
 -- User preferences
-CREATE TABLE user_preferences (
+CREATE TABLE IF NOT EXISTS user_preferences (
   user_id TEXT PRIMARY KEY,
   theme TEXT DEFAULT 'system', -- 'light', 'dark', 'system'
   favorite_links TEXT, -- JSON array of link IDs
@@ -59,8 +59,8 @@ CREATE TABLE user_preferences (
 );
 
 -- Indexes for common queries
-CREATE INDEX idx_links_category ON service_links(category_id);
-CREATE INDEX idx_links_pinned ON service_links(is_pinned);
-CREATE INDEX idx_docs_category ON documents(category_id);
-CREATE INDEX idx_docs_published ON documents(is_published);
-CREATE INDEX idx_docs_slug ON documents(slug);
+CREATE INDEX IF NOT EXISTS idx_links_category ON service_links(category_id);
+CREATE INDEX IF NOT EXISTS idx_links_pinned ON service_links(is_pinned);
+CREATE INDEX IF NOT EXISTS idx_docs_category ON documents(category_id);
+CREATE INDEX IF NOT EXISTS idx_docs_published ON documents(is_published);
+CREATE INDEX IF NOT EXISTS idx_docs_slug ON documents(slug);

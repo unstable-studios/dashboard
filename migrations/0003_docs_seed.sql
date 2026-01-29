@@ -1,5 +1,5 @@
--- Seed documents for testing
-INSERT INTO documents (title, slug, content, excerpt, category_id, is_published, created_by, updated_by) VALUES
+-- Seed documents for testing (idempotent: ignore if slug already exists)
+INSERT OR IGNORE INTO documents (title, slug, content, excerpt, category_id, is_published, created_by, updated_by) VALUES
   ('New Employee Onboarding', 'onboarding', '# New Employee Onboarding
 
 Welcome to Unstable Studios! This guide will help you get set up.

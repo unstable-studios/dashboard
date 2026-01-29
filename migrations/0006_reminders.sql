@@ -1,5 +1,5 @@
 -- Reminders for calendar/task tracking
-CREATE TABLE reminders (
+CREATE TABLE IF NOT EXISTS reminders (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   title TEXT NOT NULL,
   description TEXT,
@@ -14,15 +14,15 @@ CREATE TABLE reminders (
 );
 
 -- Calendar subscription tokens for iCal feeds
-CREATE TABLE calendar_tokens (
+CREATE TABLE IF NOT EXISTS calendar_tokens (
   user_id TEXT PRIMARY KEY,
   token TEXT NOT NULL UNIQUE,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Indexes for common queries
-CREATE INDEX idx_reminders_owner ON reminders(owner_id);
-CREATE INDEX idx_reminders_global ON reminders(is_global);
-CREATE INDEX idx_reminders_next_due ON reminders(next_due);
-CREATE INDEX idx_reminders_doc ON reminders(doc_id);
-CREATE INDEX idx_calendar_tokens_token ON calendar_tokens(token);
+CREATE INDEX IF NOT EXISTS idx_reminders_owner ON reminders(owner_id);
+CREATE INDEX IF NOT EXISTS idx_reminders_global ON reminders(is_global);
+CREATE INDEX IF NOT EXISTS idx_reminders_next_due ON reminders(next_due);
+CREATE INDEX IF NOT EXISTS idx_reminders_doc ON reminders(doc_id);
+CREATE INDEX IF NOT EXISTS idx_calendar_tokens_token ON calendar_tokens(token);

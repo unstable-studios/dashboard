@@ -88,9 +88,10 @@ app.route("/api/calendar", calendar);
 // iCal feed (token-authenticated, at root level for calendar app compatibility)
 app.get("/calendar.ics", async (c) => {
   // Rewrite to the calendar feed handler with token
+  // Note: calendar sub-app routes are relative, so use /feed not /api/calendar/feed
   const token = c.req.query("token");
   const url = new URL(c.req.url);
-  url.pathname = "/api/calendar/feed";
+  url.pathname = "/feed";
   if (token) {
     url.searchParams.set("token", token);
   }
@@ -101,6 +102,11 @@ app.get("/calendar.ics", async (c) => {
     c.executionCtx
   );
   return response;
+});
+
+// Serve static assets for all other routes (SPA fallback)
+app.all("*", async (c) => {
+  return c.env.ASSETS.fetch(c.req.raw);
 });
 
 export default app;
