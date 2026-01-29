@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.5.0...echo-hub-v1.5.1) (2026-01-29)
+
+
+### Bug Fixes
+
+* **echo-hub:** fix build errors and add build step to CI ([#50](https://github.com/unstable-studios/echo-core/issues/50)) ([778c567](https://github.com/unstable-studios/echo-core/commit/778c5670ca7be8492d673485b9bb1dfccf47904d))
+
 ## [1.5.0](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.4.0...echo-hub-v1.5.0) (2026-01-29)
 
 
