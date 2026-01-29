@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.1](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.9.0...echo-hub-v1.9.1) (2026-01-29)
+
+
+### Bug Fixes
+
+* **echo-hub:** prevent click after drag-and-drop ([#70](https://github.com/unstable-studios/echo-core/issues/70)) ([b4afe0c](https://github.com/unstable-studios/echo-core/commit/b4afe0cfc1d9d99aaf8d3648acd39482f30ebf12))
+
 ## [1.9.0](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.8.0...echo-hub-v1.9.0) (2026-01-29)
 
 
