@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.3.0...echo-hub-v1.3.1) (2026-01-29)
+
+
+### Bug Fixes
+
+* **echo-hub:** wrap Lucide icons in span for title tooltip ([#39](https://github.com/unstable-studios/echo-core/issues/39)) ([1271022](https://github.com/unstable-studios/echo-core/commit/1271022724390143d5d706f5304a261a559e321b))
+
 ## [1.3.0](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.2.1...echo-hub-v1.3.0) (2026-01-28)
 
 
