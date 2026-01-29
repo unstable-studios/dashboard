@@ -2,6 +2,8 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 
 export function LoginPage() {
   const { loginWithRedirect, isAuthenticated, isLoading, error } = useAuth0();
@@ -31,21 +33,35 @@ export function LoginPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-muted">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen flex-col items-center justify-center gap-8">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold">Unstable Studios</h1>
-        <p className="text-muted-foreground mt-2">The Hub</p>
-      </div>
-      <Button size="lg" onClick={handleLogin}>
-        Sign in with Auth0
-      </Button>
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-muted p-4">
+      <Card className="w-full max-w-md">
+        <CardContent className="pt-8 pb-8">
+          <div className="flex flex-col items-center gap-8">
+            <div className="text-center space-y-2">
+              <div className="mx-auto w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+                <span className="text-3xl font-bold text-primary">U</span>
+              </div>
+              <h1 className="text-2xl font-bold tracking-tight">Welcome to The Hub</h1>
+              <p className="text-muted-foreground text-sm">
+                Sign in to access Unstable Studios resources
+              </p>
+            </div>
+            <Button size="lg" className="w-full" onClick={handleLogin}>
+              Continue with Auth0
+            </Button>
+            <p className="text-xs text-muted-foreground text-center">
+              Internal use only. Requires organization membership.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
