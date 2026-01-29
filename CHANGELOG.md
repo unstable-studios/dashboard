@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.2](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.3.1...echo-hub-v1.3.2) (2026-01-29)
+
+
+### Bug Fixes
+
+* **echo-hub:** improve iCal feed RFC 5545 compliance for Fantastical ([#41](https://github.com/unstable-studios/echo-core/issues/41)) ([3957d57](https://github.com/unstable-studios/echo-core/commit/3957d57805a3017daa408be5f5c690ac22a87ff9))
+
 ## [1.3.1](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.3.0...echo-hub-v1.3.1) (2026-01-29)
 
 
