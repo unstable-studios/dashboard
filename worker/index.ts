@@ -11,6 +11,7 @@ import attachments from "./routes/attachments";
 import reminders from "./routes/reminders";
 import calendar from "./routes/calendar";
 import emailActions from "./routes/email-actions";
+import onboarding from "./routes/onboarding";
 import { handleScheduled } from "./scheduled";
 
 interface Variables {
@@ -37,8 +38,17 @@ app.get("/api/debug/config", authMiddleware(), adminMiddleware(), (c) => {
 });
 
 // Get current user info (requires auth)
-app.get("/api/auth/me", authMiddleware(), (c) => {
+app.get("/api/auth/me", authMiddleware(), async (c) => {
   const user = c.get("user");
+
+  // Check onboarding status
+  const prefs = await c.env.DB.prepare(
+    "SELECT onboarding_completed FROM user_preferences WHERE user_id = ?"
+  )
+    .bind(user.sub)
+    .first<{ onboarding_completed: number }>();
+
+  const onboardingCompleted = prefs?.onboarding_completed === 1;
 
   return c.json({
     sub: user.sub,
@@ -49,6 +59,7 @@ app.get("/api/auth/me", authMiddleware(), (c) => {
     isAdmin: hasAdminPermission(user.permissions),
     hub: getHubPermissions(user.permissions),
     calendar: getCalendarPermissions(user.permissions),
+    onboardingCompleted,
   });
 });
 
@@ -89,6 +100,9 @@ app.route("/api/calendar", calendar);
 
 // Email action handlers (one-click snooze/ignore from emails)
 app.route("/api/email-action", emailActions);
+
+// Onboarding for new users
+app.route("/api/onboarding", onboarding);
 
 // iCal feed (token-authenticated, at root level for calendar app compatibility)
 app.get("/calendar.ics", async (c) => {

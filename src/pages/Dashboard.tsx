@@ -13,10 +13,11 @@ import {
 import { ReminderGrid } from '@/components/calendar/ReminderGrid';
 import { Button } from '@/components/ui/button';
 import { ViewToggle } from '@/components/ui/view-toggle';
+import { Card, CardContent } from '@/components/ui/card';
 import { authFetch } from '@/lib/auth';
 import { useViewPreference } from '@/hooks/useViewPreference';
 import { isUpcomingOrPastDue } from '@/lib/calendar';
-import { Pin, FileText, Bell } from 'lucide-react';
+import { Pin, FileText, Bell, Sparkles, X } from 'lucide-react';
 
 const DEFAULT_PERMISSIONS: CalendarPermissions = {
 	canRead: false,
@@ -27,6 +28,24 @@ const DEFAULT_PERMISSIONS: CalendarPermissions = {
 	canDeleteUser: false,
 	canDeleteGlobal: false,
 };
+
+// Initialize onboarding for new users
+async function initializeOnboarding(
+	getAccessTokenSilently: () => Promise<string>
+): Promise<boolean> {
+	try {
+		const res = await authFetch('/api/onboarding/initialize', getAccessTokenSilently, {
+			method: 'POST',
+		});
+		if (res.ok) {
+			const data = await res.json();
+			return !data.alreadyCompleted;
+		}
+	} catch (err) {
+		console.error('Error initializing onboarding:', err);
+	}
+	return false;
+}
 
 export function Dashboard() {
 	const { getAccessTokenSilently } = useAuth0();
@@ -43,6 +62,7 @@ export function Dashboard() {
 	const [userFavoriteDocs, setUserFavoriteDocs] = useState<number[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const [showWelcome, setShowWelcome] = useState(false);
 
 	const fetchData = async () => {
 		try {
@@ -77,6 +97,32 @@ export function Dashboard() {
 			setReminders(remindersData.reminders || []);
 			setCalendarPermissions(meData.calendar || DEFAULT_PERMISSIONS);
 			setCurrentUserId(meData.sub || '');
+
+			// Check if new user needs onboarding
+			if (meData.onboardingCompleted === false) {
+				const wasNewUser = await initializeOnboarding(getAccessTokenSilently);
+				if (wasNewUser) {
+					setShowWelcome(true);
+					// Refetch data after onboarding to get newly created content
+					const [newLinksRes, newDocsRes, newRemindersRes] = await Promise.all([
+						authFetch('/api/links', getAccessTokenSilently),
+						authFetch('/api/docs', getAccessTokenSilently),
+						authFetch('/api/reminders', getAccessTokenSilently),
+					]);
+					if (newLinksRes.ok) {
+						const newLinksData = await newLinksRes.json();
+						setAllLinks(newLinksData.links);
+					}
+					if (newDocsRes.ok) {
+						const newDocsData = await newDocsRes.json();
+						setAllDocs(newDocsData.documents || []);
+					}
+					if (newRemindersRes.ok) {
+						const newRemindersData = await newRemindersRes.json();
+						setReminders(newRemindersData.reminders || []);
+					}
+				}
+			}
 		} catch (err) {
 			console.error('Error fetching data:', err);
 			setError(err instanceof Error ? err.message : 'Failed to load data');
@@ -201,6 +247,30 @@ export function Dashboard() {
 					<div className='text-destructive'>{error}</div>
 				) : (
 					<>
+						{/* Welcome Banner for New Users */}
+						{showWelcome && (
+							<Card className='border-primary/20 bg-primary/5 relative'>
+								<CardContent className='flex items-start gap-4 py-4'>
+									<Sparkles className='text-primary h-6 w-6 flex-shrink-0 mt-0.5' />
+									<div className='flex-1 min-w-0'>
+										<h3 className='font-semibold'>Welcome to Echo Hub!</h3>
+										<p className='text-muted-foreground text-sm mt-1'>
+											We&apos;ve set up some starter content for you. Check out your new links,
+											read the welcome document, and explore the calendar for your first reminder.
+										</p>
+									</div>
+									<Button
+										variant='ghost'
+										size='icon'
+										className='flex-shrink-0 h-8 w-8'
+										onClick={() => setShowWelcome(false)}
+									>
+										<X className='h-4 w-4' />
+									</Button>
+								</CardContent>
+							</Card>
+						)}
+
 						{/* Upcoming Reminders Section */}
 						{!loading && upcomingReminders.length > 0 && (
 							<section>
