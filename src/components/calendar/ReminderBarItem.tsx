@@ -10,6 +10,7 @@ import { MarqueeText } from '@/components/ui/marquee-text';
 import { Bell, Globe, User, FileText, Pencil, Trash2, Calendar, BellOff, XCircle, CheckCircle } from 'lucide-react';
 import { Reminder, CalendarPermissions } from './ReminderCard';
 import { formatRecurrence, formatDate, isPastDue, isUpcoming, isDueToday } from '@/lib/calendar';
+import { useFeatures } from '@/hooks/useFeatures';
 
 interface ReminderBarItemProps {
 	reminder: Reminder;
@@ -43,6 +44,7 @@ export function ReminderBarItem({
 	onUncomplete,
 }: ReminderBarItemProps) {
 	const navigate = useNavigate();
+	const { orgs: orgsEnabled } = useFeatures();
 	const isOwner = reminder.owner_id === currentUserId;
 	const isGlobal = reminder.is_global === 1;
 	const pastDue = isPastDue(reminder.next_due);
@@ -103,10 +105,12 @@ export function ReminderBarItem({
 							<MarqueeText className="font-medium text-sm flex-1 min-w-0">
 								{reminder.title}
 							</MarqueeText>
-							{isGlobal ? (
-								<Globe className="h-2.5 w-2.5 text-muted-foreground flex-shrink-0" />
-							) : (
-								<User className="h-2.5 w-2.5 text-muted-foreground flex-shrink-0" />
+							{orgsEnabled && (
+								isGlobal ? (
+									<Globe className="h-2.5 w-2.5 text-muted-foreground flex-shrink-0" />
+								) : (
+									<User className="h-2.5 w-2.5 text-muted-foreground flex-shrink-0" />
+								)
 							)}
 							{isSnoozed && (
 								<BellOff className="h-2.5 w-2.5 text-amber-500 flex-shrink-0" />

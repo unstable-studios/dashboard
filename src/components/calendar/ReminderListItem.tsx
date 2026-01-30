@@ -10,6 +10,7 @@ import {
 import { Bell, Globe, User, FileText, Pencil, Trash2, Calendar, BellOff, XCircle, CheckCircle } from 'lucide-react';
 import { Reminder, CalendarPermissions } from './ReminderCard';
 import { formatRecurrence, formatDate, isPastDue, isUpcoming, isDueToday } from '@/lib/calendar';
+import { useFeatures } from '@/hooks/useFeatures';
 
 interface ReminderListItemProps {
 	reminder: Reminder;
@@ -43,6 +44,7 @@ export function ReminderListItem({
 	onUncomplete,
 }: ReminderListItemProps) {
 	const navigate = useNavigate();
+	const { orgs: orgsEnabled } = useFeatures();
 	const isOwner = reminder.owner_id === currentUserId;
 	const isGlobal = reminder.is_global === 1;
 	const pastDue = isPastDue(reminder.next_due);
@@ -77,14 +79,16 @@ export function ReminderListItem({
 					<div className="flex-1 min-w-0">
 						<div className="flex items-center gap-2">
 							<h3 className="font-semibold truncate">{reminder.title}</h3>
-							{isGlobal ? (
-								<span title="Organization-wide">
-									<Globe className="h-3 w-3 text-muted-foreground shrink-0" />
-								</span>
-							) : (
-								<span title="Personal">
-									<User className="h-3 w-3 text-muted-foreground shrink-0" />
-								</span>
+							{orgsEnabled && (
+								isGlobal ? (
+									<span title="Organization-wide">
+										<Globe className="h-3 w-3 text-muted-foreground shrink-0" />
+									</span>
+								) : (
+									<span title="Personal">
+										<User className="h-3 w-3 text-muted-foreground shrink-0" />
+									</span>
+								)
 							)}
 						</div>
 						{reminder.description && (

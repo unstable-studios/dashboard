@@ -19,6 +19,8 @@ try {
 
 // https://vite.dev/config/
 export default defineConfig({
+	// Expose both VITE_ and FEATURE_ prefixed env vars to the client
+	envPrefix: ['VITE_', 'FEATURE_'],
 	define: {
 		__APP_VERSION__: JSON.stringify(appVersion),
 	},

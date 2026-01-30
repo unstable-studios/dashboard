@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/context-menu';
 import { Bell, Globe, User, FileText, Pencil, Trash2, Calendar, BellOff, XCircle, CheckCircle } from 'lucide-react';
 import { formatRecurrence, formatDate, isPastDue, isUpcoming, isDueToday } from '@/lib/calendar';
+import { useFeatures } from '@/hooks/useFeatures';
 
 export interface Reminder {
 	id: number;
@@ -73,6 +74,7 @@ export function ReminderCard({
 	onUncomplete,
 }: ReminderCardProps) {
 	const navigate = useNavigate();
+	const { orgs: orgsEnabled } = useFeatures();
 	const isOwner = reminder.owner_id === currentUserId;
 	const isGlobal = reminder.is_global === 1;
 	const pastDue = isPastDue(reminder.next_due);
@@ -111,14 +113,16 @@ export function ReminderCard({
 										{reminder.title}
 									</CardTitle>
 								</div>
-								{isGlobal ? (
-									<span title="Organization-wide">
-										<Globe className="h-4 w-4 text-muted-foreground shrink-0" />
-									</span>
-								) : (
-									<span title="Personal">
-										<User className="h-4 w-4 text-muted-foreground shrink-0" />
-									</span>
+								{orgsEnabled && (
+									isGlobal ? (
+										<span title="Organization-wide">
+											<Globe className="h-4 w-4 text-muted-foreground shrink-0" />
+										</span>
+									) : (
+										<span title="Personal">
+											<User className="h-4 w-4 text-muted-foreground shrink-0" />
+										</span>
+									)
 								)}
 							</div>
 							{reminder.description && (

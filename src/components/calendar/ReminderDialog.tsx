@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { authFetch } from '@/lib/auth';
+import { useFeatures } from '@/hooks/useFeatures';
 import { Reminder, CalendarPermissions } from './ReminderCard';
 import { DocumentCombobox } from './DocumentCombobox';
 
@@ -60,6 +61,7 @@ export function ReminderDialog({
 	onSaved,
 }: ReminderDialogProps) {
 	const { getAccessTokenSilently } = useAuth0();
+	const { orgs: orgsEnabled } = useFeatures();
 	const [saving, setSaving] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
@@ -279,7 +281,7 @@ export function ReminderDialog({
 						</div>
 					</div>
 
-					{canMakeGlobal && (
+					{orgsEnabled && canMakeGlobal && (
 						<div className="flex items-center gap-2">
 							<input
 								type="checkbox"

@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 import { Home, Link as LinkIcon, FileText, Calendar, Settings, Shield } from 'lucide-react';
+import { useFeatures } from '@/hooks/useFeatures';
 
 interface AppShellProps {
 	children: React.ReactNode;
@@ -26,6 +27,7 @@ const navItems = [
 export function AppShell({ children }: AppShellProps) {
 	const { user, logout } = useAuth0();
 	const location = useLocation();
+	const { adminPanel: adminPanelEnabled } = useFeatures();
 
 	const handleLogout = () => {
 		logout({
@@ -87,12 +89,14 @@ export function AppShell({ children }: AppShellProps) {
 									Settings
 								</Link>
 							</DropdownMenuItem>
-							<DropdownMenuItem asChild>
-								<Link to="/admin" className="gap-2">
-									<Shield className="h-4 w-4" />
-									Admin
-								</Link>
-							</DropdownMenuItem>
+							{adminPanelEnabled && (
+								<DropdownMenuItem asChild>
+									<Link to="/admin" className="gap-2">
+										<Shield className="h-4 w-4" />
+										Admin
+									</Link>
+								</DropdownMenuItem>
+							)}
 							<DropdownMenuSeparator />
 							<DropdownMenuItem onClick={handleLogout}>
 								Sign out
