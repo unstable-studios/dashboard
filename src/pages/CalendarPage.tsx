@@ -32,7 +32,7 @@ const DEFAULT_PERMISSIONS: CalendarPermissions = {
 
 export function CalendarPage() {
 	const { getAccessTokenSilently } = useAuth0();
-	const [viewMode, setViewMode] = useViewPreference();
+	const [viewMode, setViewMode] = useViewPreference('reminders');
 	const [reminders, setReminders] = useState<Reminder[]>([]);
 	const [documents, setDocuments] = useState<Document[]>([]);
 	const [loading, setLoading] = useState(true);

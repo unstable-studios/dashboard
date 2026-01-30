@@ -20,7 +20,7 @@ interface Category {
 
 export function LinksPage() {
 	const { getAccessTokenSilently } = useAuth0();
-	const [viewMode, setViewMode] = useViewPreference();
+	const [viewMode, setViewMode] = useViewPreference('links');
 	const [links, setLinks] = useState<ServiceLink[]>([]);
 	const [categories, setCategories] = useState<Category[]>([]);
 	const [selectedCategory, setSelectedCategory] = useState<number | null>(null);

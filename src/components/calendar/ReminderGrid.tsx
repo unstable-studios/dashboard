@@ -1,5 +1,6 @@
 import { ReminderCard, Reminder, CalendarPermissions } from './ReminderCard';
 import { ReminderListItem } from './ReminderListItem';
+import { ReminderBarItem } from './ReminderBarItem';
 import { ViewMode } from '@/hooks/useViewPreference';
 import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -48,6 +49,18 @@ export function ReminderGrid({
 				</div>
 			);
 		}
+		if (viewMode === 'bar') {
+			return (
+				<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2">
+					{[...Array(12)].map((_, i) => (
+						<div
+							key={i}
+							className="h-14 rounded-md bg-muted animate-pulse"
+						/>
+					))}
+				</div>
+			);
+		}
 		return (
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
 				{[...Array(6)].map((_, i) => (
@@ -83,6 +96,27 @@ export function ReminderGrid({
 			<div className="space-y-2">
 				{reminders.map((reminder) => (
 					<ReminderListItem
+						key={reminder.id}
+						reminder={reminder}
+						currentUserId={currentUserId}
+						permissions={permissions}
+						onEdit={onEdit}
+						onDelete={onDelete}
+						onSnooze={onSnooze}
+						onUnsnooze={onUnsnooze}
+						onIgnore={onIgnore}
+						onUnignore={onUnignore}
+					/>
+				))}
+			</div>
+		);
+	}
+
+	if (viewMode === 'bar') {
+		return (
+			<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2">
+				{reminders.map((reminder) => (
+					<ReminderBarItem
 						key={reminder.id}
 						reminder={reminder}
 						currentUserId={currentUserId}
