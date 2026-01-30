@@ -164,3 +164,19 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Marquee animation for overflow text - wrapping loop with pause */
+@keyframes marquee {
+  0%, 20% {
+    transform: translateX(0);
+  }
+  80%, 100% {
+    transform: translateX(var(--marquee-distance, -100px));
+  }
+}
+
+.animate-marquee {
+  animation: marquee var(--marquee-duration, 8s) linear infinite;
+  /* Add 3s delay before first animation starts */
+  animation-delay: 3s;
+}

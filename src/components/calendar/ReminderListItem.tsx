@@ -7,7 +7,7 @@ import {
 	ContextMenuSeparator,
 	ContextMenuTrigger,
 } from '@/components/ui/context-menu';
-import { Bell, Globe, User, FileText, Pencil, Trash2, Calendar, BellOff, X } from 'lucide-react';
+import { Bell, Globe, User, FileText, Pencil, Trash2, Calendar, BellOff, XCircle, CheckCircle } from 'lucide-react';
 import { Reminder, CalendarPermissions } from './ReminderCard';
 import { formatRecurrence, formatDate, isPastDue, isUpcoming, isDueToday } from '@/lib/calendar';
 
@@ -15,24 +15,32 @@ interface ReminderListItemProps {
 	reminder: Reminder;
 	currentUserId: string;
 	permissions: CalendarPermissions;
+	isHistory?: boolean;
+	isSnoozed?: boolean;
 	onEdit?: (reminder: Reminder) => void;
 	onDelete?: (reminder: Reminder) => void;
 	onSnooze?: (reminder: Reminder) => void;
 	onUnsnooze?: (reminder: Reminder) => void;
 	onIgnore?: (reminder: Reminder) => void;
 	onUnignore?: (reminder: Reminder) => void;
+	onComplete?: (reminder: Reminder) => void;
+	onUncomplete?: (reminder: Reminder) => void;
 }
 
 export function ReminderListItem({
 	reminder,
 	currentUserId,
 	permissions,
+	isHistory,
+	isSnoozed: isSnoozedView,
 	onEdit,
 	onDelete,
 	onSnooze,
 	onUnsnooze,
 	onIgnore,
 	onUnignore,
+	onComplete,
+	onUncomplete,
 }: ReminderListItemProps) {
 	const navigate = useNavigate();
 	const isOwner = reminder.owner_id === currentUserId;
@@ -43,7 +51,8 @@ export function ReminderListItem({
 	const recurrence = formatRecurrence(reminder.rrule);
 	const isSnoozed = reminder.snoozed === 1;
 	const isIgnored = reminder.ignored === 1;
-	const showActionButtons = upcoming && !pastDue;
+	const isCompleted = reminder.completed === 1;
+	const showActionButtons = ((upcoming || pastDue) && !isHistory) || isSnoozedView;
 
 	const canEdit = isGlobal || !isOwner
 		? permissions.canEditGlobal
@@ -62,9 +71,9 @@ export function ReminderListItem({
 		<ContextMenu>
 			<ContextMenuTrigger asChild>
 				<div
-					className={`flex items-center gap-4 p-4 rounded-lg border bg-card transition-colors cursor-default ${pastDue ? 'border-destructive/50 bg-destructive/5' : upcoming ? 'border-amber-500/50 bg-amber-500/5' : ''}`}
+					className={`flex items-center gap-4 p-4 rounded-lg border bg-card transition-colors cursor-default ${isCompleted ? 'border-green-500/50 bg-green-500/5' : pastDue ? 'border-destructive/50 bg-destructive/5' : upcoming ? 'border-amber-500/50 bg-amber-500/5' : ''}`}
 				>
-					<Bell className={`h-5 w-5 shrink-0 ${pastDue ? 'text-destructive' : upcoming ? 'text-amber-500' : 'text-muted-foreground'}`} />
+					<Bell className={`h-5 w-5 shrink-0 ${isCompleted ? 'text-green-500' : pastDue ? 'text-destructive' : upcoming ? 'text-amber-500' : 'text-muted-foreground'}`} />
 					<div className="flex-1 min-w-0">
 						<div className="flex items-center gap-2">
 							<h3 className="font-semibold truncate">{reminder.title}</h3>
@@ -107,39 +116,60 @@ export function ReminderListItem({
 						)}
 						{isIgnored && (
 							<span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded hidden sm:flex items-center gap-1">
-								<X className="h-3 w-3" />
-								Ignored
+								<XCircle className="h-3 w-3" />
+								Dismissed
+							</span>
+						)}
+						{isCompleted && (
+							<span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded hidden sm:flex items-center gap-1">
+								<CheckCircle className="h-3 w-3" />
+								Completed
 							</span>
 						)}
 						{showActionButtons && (
 							<div className="hidden sm:flex gap-1">
-								{!isSnoozed && !isIgnored && (
+								{!isSnoozed && !isIgnored && !isCompleted && (
 									<>
 										<Button
-											variant="ghost"
+											variant="default"
 											size="sm"
 											onClick={(e) => {
 												e.stopPropagation();
-												onSnooze?.(reminder);
+												onComplete?.(reminder);
 											}}
-											disabled={dueToday}
-											title={dueToday ? "Cannot snooze reminder due today" : "Snooze until due date"}
-											className="h-7 w-7 p-0"
+											title="Mark as complete"
+											className="h-7 px-2"
 										>
-											<BellOff className="h-3.5 w-3.5" />
+											<CheckCircle className="h-3.5 w-3.5" />
 										</Button>
-										<Button
-											variant="ghost"
-											size="sm"
-											onClick={(e) => {
-												e.stopPropagation();
-												onIgnore?.(reminder);
-											}}
-											title="Ignore this occurrence"
-											className="h-7 w-7 p-0"
-										>
-											<X className="h-3.5 w-3.5" />
-										</Button>
+										{upcoming && !dueToday && (
+											<Button
+												variant="ghost"
+												size="sm"
+												onClick={(e) => {
+													e.stopPropagation();
+													onSnooze?.(reminder);
+												}}
+												title="Snooze until due date"
+												className="h-7 w-7 p-0"
+											>
+												<BellOff className="h-3.5 w-3.5" />
+											</Button>
+										)}
+										{pastDue && (
+											<Button
+												variant="ghost"
+												size="sm"
+												onClick={(e) => {
+													e.stopPropagation();
+													onIgnore?.(reminder);
+												}}
+												title="Dismiss this occurrence"
+												className="h-7 w-7 p-0"
+											>
+												<XCircle className="h-3.5 w-3.5" />
+											</Button>
+										)}
 									</>
 								)}
 								{isSnoozed && (
@@ -164,7 +194,21 @@ export function ReminderListItem({
 											e.stopPropagation();
 											onUnignore?.(reminder);
 										}}
-										title="Unignore"
+										title="Restore"
+										className="h-7 w-7 p-0"
+									>
+										<Bell className="h-3.5 w-3.5" />
+									</Button>
+								)}
+								{isCompleted && (
+									<Button
+										variant="ghost"
+										size="sm"
+										onClick={(e) => {
+											e.stopPropagation();
+											onUncomplete?.(reminder);
+										}}
+										title="Restore"
 										className="h-7 w-7 p-0"
 									>
 										<Bell className="h-3.5 w-3.5" />
@@ -172,7 +216,7 @@ export function ReminderListItem({
 								)}
 							</div>
 						)}
-						<span className={`flex items-center gap-1 text-xs ${pastDue ? 'text-destructive font-medium' : upcoming ? 'text-amber-600 dark:text-amber-400 font-medium' : 'text-muted-foreground'}`}>
+						<span className={`flex items-center gap-1 text-xs ${isCompleted ? 'text-green-600 dark:text-green-400 font-medium' : pastDue ? 'text-destructive font-medium' : upcoming ? 'text-amber-600 dark:text-amber-400 font-medium' : 'text-muted-foreground'}`}>
 							<Calendar className="h-3 w-3" />
 							{formatDate(reminder.next_due)}
 							{pastDue && ' (Past due)'}
@@ -187,7 +231,34 @@ export function ReminderListItem({
 						View Document
 					</ContextMenuItem>
 				)}
-				{(canEdit || canDelete) && (
+				{isHistory && (isCompleted || isIgnored) && (
+					<>
+						{reminder.doc_slug && <ContextMenuSeparator />}
+						{isCompleted && onUncomplete && (
+							<ContextMenuItem
+								onClick={(e) => {
+									e.stopPropagation();
+									onUncomplete(reminder);
+								}}
+							>
+								<Bell className="h-4 w-4 mr-2" />
+								Restore
+							</ContextMenuItem>
+						)}
+						{isIgnored && onUnignore && (
+							<ContextMenuItem
+								onClick={(e) => {
+									e.stopPropagation();
+									onUnignore(reminder);
+								}}
+							>
+								<Bell className="h-4 w-4 mr-2" />
+								Restore
+							</ContextMenuItem>
+						)}
+					</>
+				)}
+				{(canEdit || canDelete) && !isHistory && (
 					<>
 						{reminder.doc_slug && <ContextMenuSeparator />}
 						{canEdit && onEdit && (

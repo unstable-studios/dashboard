@@ -10,7 +10,8 @@ import { ViewToggle } from '@/components/ui/view-toggle';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { authFetch } from '@/lib/auth';
 import { useViewPreference } from '@/hooks/useViewPreference';
-import { Plus, Bell, Settings } from 'lucide-react';
+import { useFilterPreference } from '@/hooks/useFilterPreference';
+import { Plus, Bell, Settings, History, BellOff } from 'lucide-react';
 
 interface Document {
 	id: number;
@@ -34,14 +35,22 @@ export function CalendarPage() {
 	const { getAccessTokenSilently } = useAuth0();
 	const [viewMode, setViewMode] = useViewPreference('reminders');
 	const [reminders, setReminders] = useState<Reminder[]>([]);
+	const [historyReminders, setHistoryReminders] = useState<Reminder[]>([]);
+	const [snoozedReminders, setSnoozedReminders] = useState<Reminder[]>([]);
 	const [documents, setDocuments] = useState<Document[]>([]);
 	const [loading, setLoading] = useState(true);
+	const [historyLoading, setHistoryLoading] = useState(false);
+	const [snoozedLoading, setSnoozedLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [permissions, setPermissions] = useState<CalendarPermissions>(DEFAULT_PERMISSIONS);
 	const [currentUserId, setCurrentUserId] = useState('');
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
-	const [filter, setFilter] = useState<'all' | 'upcoming' | 'past'>('all');
+	const [filter, setFilter] = useFilterPreference(
+		'reminders',
+		'all',
+		['all', 'upcoming', 'past', 'snoozed', 'history'] as const
+	);
 
 	const fetchData = async () => {
 		try {
@@ -73,9 +82,51 @@ export function CalendarPage() {
 		}
 	};
 
+	const fetchHistory = async () => {
+		setHistoryLoading(true);
+		try {
+			const res = await authFetch('/api/reminders/history', getAccessTokenSilently);
+			if (!res.ok) {
+				throw new Error('Failed to fetch history');
+			}
+			const data = await res.json();
+			setHistoryReminders(data.reminders);
+		} catch (err) {
+			console.error('Error fetching history:', err);
+		} finally {
+			setHistoryLoading(false);
+		}
+	};
+
+	const fetchSnoozed = async () => {
+		setSnoozedLoading(true);
+		try {
+			const res = await authFetch('/api/reminders/snoozed', getAccessTokenSilently);
+			if (!res.ok) {
+				throw new Error('Failed to fetch snoozed');
+			}
+			const data = await res.json();
+			setSnoozedReminders(data.reminders);
+		} catch (err) {
+			console.error('Error fetching snoozed:', err);
+		} finally {
+			setSnoozedLoading(false);
+		}
+	};
+
 	useEffect(() => {
 		fetchData();
 	}, [getAccessTokenSilently]);
+
+	// Fetch history/snoozed when switching to those filters
+	useEffect(() => {
+		if (filter === 'history' && historyReminders.length === 0) {
+			fetchHistory();
+		}
+		if (filter === 'snoozed' && snoozedReminders.length === 0) {
+			fetchSnoozed();
+		}
+	}, [filter]);
 
 	const handleEdit = (reminder: Reminder) => {
 		setEditingReminder(reminder);
@@ -107,15 +158,22 @@ export function CalendarPage() {
 	};
 
 	const handleSnooze = async (reminder: Reminder) => {
+		// Immediately remove from main list
+		setReminders((prev) => prev.filter((r) => r.id !== reminder.id));
+
 		try {
 			const res = await authFetch(`/api/reminders/${reminder.id}/snooze`, getAccessTokenSilently, {
 				method: 'POST',
 			});
 			if (!res.ok) {
 				const data = await res.json();
+				// Restore on error
+				setReminders((prev) => [...prev, reminder]);
 				throw new Error(data.error || 'Failed to snooze reminder');
 			}
-			fetchData();
+			// Add to snoozed list
+			const snoozedReminder = { ...reminder, snoozed: 1 };
+			setSnoozedReminders((prev) => [...prev, snoozedReminder]);
 		} catch (err) {
 			console.error('Error snoozing reminder:', err);
 			alert(err instanceof Error ? err.message : 'Failed to snooze reminder');
@@ -123,6 +181,9 @@ export function CalendarPage() {
 	};
 
 	const handleUnsnooze = async (reminder: Reminder) => {
+		// Remove from snoozed list immediately
+		setSnoozedReminders((prev) => prev.filter((r) => r.id !== reminder.id));
+
 		try {
 			const res = await authFetch(`/api/reminders/${reminder.id}/snooze`, getAccessTokenSilently, {
 				method: 'DELETE',
@@ -130,7 +191,9 @@ export function CalendarPage() {
 			if (!res.ok) {
 				throw new Error('Failed to unsnooze reminder');
 			}
-			fetchData();
+			// Add back to main list
+			const unsnoozedReminder = { ...reminder, snoozed: 0 };
+			setReminders((prev) => [...prev, unsnoozedReminder]);
 		} catch (err) {
 			console.error('Error unsnoozing reminder:', err);
 			alert('Failed to unsnooze reminder');
@@ -138,32 +201,88 @@ export function CalendarPage() {
 	};
 
 	const handleIgnore = async (reminder: Reminder) => {
+		// Immediately remove from reminders UI
+		setReminders((prev) => prev.filter((r) => r.id !== reminder.id));
+
 		try {
 			const res = await authFetch(`/api/reminders/${reminder.id}/ignore`, getAccessTokenSilently, {
 				method: 'POST',
 			});
 			if (!res.ok) {
-				throw new Error('Failed to ignore reminder');
+				// Restore on error
+				setReminders((prev) => [...prev, reminder]);
+				throw new Error('Failed to dismiss reminder');
 			}
-			fetchData();
+			// Add to history with dismissed flag
+			const dismissedReminder = { ...reminder, ignored: 1, actioned_at: new Date().toISOString() };
+			setHistoryReminders((prev) => [dismissedReminder, ...prev]);
 		} catch (err) {
-			console.error('Error ignoring reminder:', err);
-			alert('Failed to ignore reminder');
+			console.error('Error dismissing reminder:', err);
+			alert('Failed to dismiss reminder');
 		}
 	};
 
 	const handleUnignore = async (reminder: Reminder) => {
+		// Remove from history UI immediately
+		setHistoryReminders((prev) => prev.filter((r) => !(r.id === reminder.id && r.next_due === reminder.next_due)));
+
 		try {
 			const res = await authFetch(`/api/reminders/${reminder.id}/ignore`, getAccessTokenSilently, {
 				method: 'DELETE',
 			});
 			if (!res.ok) {
-				throw new Error('Failed to unignore reminder');
+				throw new Error('Failed to restore reminder');
 			}
+			// Refetch reminders to get the restored item
 			fetchData();
 		} catch (err) {
-			console.error('Error unignoring reminder:', err);
-			alert('Failed to unignore reminder');
+			console.error('Error restoring reminder:', err);
+			alert('Failed to restore reminder');
+		}
+	};
+
+	const handleComplete = async (reminder: Reminder) => {
+		// Immediately remove from reminders UI
+		setReminders((prev) => prev.filter((r) => r.id !== reminder.id));
+
+		try {
+			const res = await authFetch(`/api/reminders/${reminder.id}/complete`, getAccessTokenSilently, {
+				method: 'POST',
+			});
+			if (!res.ok) {
+				// Restore on error
+				setReminders((prev) => [...prev, reminder]);
+				throw new Error('Failed to complete reminder');
+			}
+			// Add to history with completed flag
+			const completedReminder = { ...reminder, completed: 1, actioned_at: new Date().toISOString() };
+			setHistoryReminders((prev) => [completedReminder, ...prev]);
+			// If recurring, refetch to get next occurrence
+			if (reminder.rrule) {
+				fetchData();
+			}
+		} catch (err) {
+			console.error('Error completing reminder:', err);
+			alert('Failed to complete reminder');
+		}
+	};
+
+	const handleUncomplete = async (reminder: Reminder) => {
+		// Remove from history UI immediately
+		setHistoryReminders((prev) => prev.filter((r) => !(r.id === reminder.id && r.next_due === reminder.next_due)));
+
+		try {
+			const res = await authFetch(`/api/reminders/${reminder.id}/complete`, getAccessTokenSilently, {
+				method: 'DELETE',
+			});
+			if (!res.ok) {
+				throw new Error('Failed to restore reminder');
+			}
+			// Refetch reminders to get the restored item
+			fetchData();
+		} catch (err) {
+			console.error('Error restoring reminder:', err);
+			alert('Failed to restore reminder');
 		}
 	};
 
@@ -171,25 +290,38 @@ export function CalendarPage() {
 	const today = new Date();
 	today.setHours(0, 0, 0, 0);
 
-	const filteredReminders = reminders.filter((reminder) => {
-		const dueDate = new Date(reminder.next_due + 'T00:00:00');
-		if (filter === 'upcoming') {
-			return dueDate >= today;
-		}
-		if (filter === 'past') {
-			return dueDate < today;
-		}
-		return true;
-	});
+	const filteredReminders = (() => {
+		if (filter === 'history') return historyReminders;
+		if (filter === 'snoozed') return snoozedReminders;
+		return reminders.filter((reminder) => {
+			const dueDate = new Date(reminder.next_due + 'T00:00:00');
+			if (filter === 'upcoming') {
+				return dueDate >= today;
+			}
+			if (filter === 'past') {
+				return dueDate < today;
+			}
+			return true;
+		});
+	})();
 
 	// Sort: past due first (most overdue first), then upcoming (soonest first)
+	// For history, sort by actioned_at descending
 	const sortedReminders = [...filteredReminders].sort((a, b) => {
+		if (filter === 'history') {
+			const dateA = a.actioned_at ? new Date(a.actioned_at) : new Date(0);
+			const dateB = b.actioned_at ? new Date(b.actioned_at) : new Date(0);
+			return dateB.getTime() - dateA.getTime();
+		}
 		const dateA = new Date(a.next_due + 'T00:00:00');
 		const dateB = new Date(b.next_due + 'T00:00:00');
 		return dateA.getTime() - dateB.getTime();
 	});
 
 	const canAddReminder = permissions.canAddUser || permissions.canAddGlobal;
+	const isHistoryView = filter === 'history';
+	const isSnoozedView = filter === 'snoozed';
+	const currentLoading = filter === 'history' ? historyLoading : filter === 'snoozed' ? snoozedLoading : loading;
 
 	return (
 		<AppShell>
@@ -248,6 +380,24 @@ export function CalendarPage() {
 							>
 								Past Due
 							</Button>
+							<Button
+								variant={filter === 'snoozed' ? 'secondary' : 'outline'}
+								size="sm"
+								onClick={() => setFilter('snoozed')}
+								className="gap-1"
+							>
+								<BellOff className="h-3 w-3" />
+								Snoozed
+							</Button>
+							<Button
+								variant={filter === 'history' ? 'secondary' : 'outline'}
+								size="sm"
+								onClick={() => setFilter('history')}
+								className="gap-1"
+							>
+								<History className="h-3 w-3" />
+								History
+							</Button>
 						</div>
 
 						{error ? (
@@ -255,16 +405,20 @@ export function CalendarPage() {
 						) : (
 							<ReminderGrid
 								reminders={sortedReminders}
-								loading={loading}
+								loading={currentLoading}
 								currentUserId={currentUserId}
 								permissions={permissions}
 								viewMode={viewMode}
+								isHistory={isHistoryView}
+								isSnoozed={isSnoozedView}
 								onEdit={handleEdit}
 								onDelete={handleDelete}
 								onSnooze={handleSnooze}
 								onUnsnooze={handleUnsnooze}
 								onIgnore={handleIgnore}
 								onUnignore={handleUnignore}
+								onComplete={handleComplete}
+								onUncomplete={handleUncomplete}
 								onNewReminder={handleNewReminder}
 								canAddReminder={canAddReminder}
 							/>

@@ -7,6 +7,7 @@ import {
 	ContextMenuTrigger,
 } from '@/components/ui/context-menu';
 import { DragHandle, DragHandleProps } from '@/components/ui/sortable-list';
+import { MarqueeText } from '@/components/ui/marquee-text';
 import { FileText, ExternalLink, Pencil, Trash2, Eye, Pin, PinOff } from 'lucide-react';
 import { Document } from './DocCard';
 
@@ -32,15 +33,6 @@ export function DocBarItem({
 	const navigate = useNavigate();
 	const isExternal = !!doc.external_url;
 
-	const handleClick = (e: React.MouseEvent) => {
-		e.preventDefault();
-		if (isExternal && doc.external_url) {
-			window.open(doc.external_url, '_blank', 'noopener,noreferrer');
-		} else {
-			navigate(`/docs/${doc.slug}`);
-		}
-	};
-
 	const handleOpen = () => {
 		if (isExternal && doc.external_url) {
 			window.open(doc.external_url, '_blank', 'noopener,noreferrer');
@@ -49,18 +41,38 @@ export function DocBarItem({
 		}
 	};
 
+	const handleClick = (e: React.MouseEvent) => {
+		// Don't navigate if clicking on the drag handle
+		if ((e.target as HTMLElement).closest('[aria-roledescription="sortable"]')) {
+			return;
+		}
+		handleOpen();
+	};
+
+	const handleKeyDown = (e: React.KeyboardEvent) => {
+		if (e.key === 'Enter' || e.key === ' ') {
+			e.preventDefault();
+			handleOpen();
+		}
+	};
+
 	return (
 		<ContextMenu>
 			<ContextMenuTrigger asChild>
-				<button
+				<div
+					role="button"
+					tabIndex={0}
 					onClick={handleClick}
-					className="flex items-center gap-2 px-3 py-2 rounded-md border bg-card hover:bg-accent transition-colors min-w-0 w-full text-left"
+					onKeyDown={handleKeyDown}
+					className="group flex items-center gap-2 px-3 py-2 h-14 rounded-md border bg-card hover:bg-accent transition-colors min-w-0 w-full text-left cursor-pointer"
 				>
 					<DragHandle dragHandleProps={dragHandleProps} />
 					<FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
 					<div className="flex-1 min-w-0">
-						<div className="flex items-center gap-1.5">
-							<span className="font-medium text-sm truncate">{doc.title}</span>
+						<div className="flex items-center gap-1.5 min-w-0">
+							<MarqueeText className="font-medium text-sm flex-1 min-w-0">
+								{doc.title}
+							</MarqueeText>
 							{isUserPinned && (
 								<Pin className="h-2.5 w-2.5 text-primary flex-shrink-0" />
 							)}
@@ -71,15 +83,15 @@ export function DocBarItem({
 							)}
 						</div>
 						{doc.excerpt && (
-							<p className="text-xs text-muted-foreground truncate">
+							<MarqueeText className="text-xs text-muted-foreground">
 								{doc.excerpt}
-							</p>
+							</MarqueeText>
 						)}
 					</div>
 					{isExternal && (
 						<ExternalLink className="h-3 w-3 text-muted-foreground flex-shrink-0" />
 					)}
-				</button>
+				</div>
 			</ContextMenuTrigger>
 			<ContextMenuContent className="w-48">
 				<ContextMenuItem onClick={handleOpen}>
