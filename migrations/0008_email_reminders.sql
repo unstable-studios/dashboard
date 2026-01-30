@@ -29,9 +29,11 @@ CREATE TABLE IF NOT EXISTS reminder_email_log (
   user_id TEXT NOT NULL,
   reminder_id INTEGER NOT NULL,
   occurrence_date TEXT NOT NULL,
-  sent_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(user_id, reminder_id, occurrence_date, sent_at)
+  sent_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Index for checking if email was sent today (duplicate prevention done in code)
+CREATE INDEX IF NOT EXISTS idx_email_log_lookup ON reminder_email_log(user_id, reminder_id, occurrence_date);
 
 -- Add timezone and email prefs to user_preferences
 ALTER TABLE user_preferences ADD COLUMN timezone TEXT DEFAULT 'America/Los_Angeles';
