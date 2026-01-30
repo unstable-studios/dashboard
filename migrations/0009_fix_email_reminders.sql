@@ -1,14 +1,39 @@
 -- Fix database schema issues from 0008_email_reminders.sql
+-- SQLite doesn't allow dropping auto-indexes, so we recreate tables instead
 
--- 1. Fix UNIQUE constraint in reminder_email_log to prevent duplicate emails
---    Remove sent_at from the constraint since we only care about one email per occurrence
-DROP INDEX IF EXISTS sqlite_autoindex_reminder_email_log_1;
+-- 1. Fix reminder_email_log: remove UNIQUE constraint with sent_at
+--    We only need to prevent duplicate emails per occurrence, not per timestamp
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_reminder_email_log_unique
+-- Save existing data
+CREATE TABLE IF NOT EXISTS reminder_email_log_backup AS
+  SELECT * FROM reminder_email_log;
+
+-- Drop old table (this also drops the problematic auto-index)
+DROP TABLE IF EXISTS reminder_email_log;
+
+-- Recreate table without the UNIQUE constraint
+CREATE TABLE IF NOT EXISTS reminder_email_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id TEXT NOT NULL,
+  reminder_id INTEGER NOT NULL,
+  occurrence_date TEXT NOT NULL,
+  sent_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Add index for lookups (duplicate prevention done in code)
+CREATE INDEX IF NOT EXISTS idx_email_log_lookup
   ON reminder_email_log(user_id, reminder_id, occurrence_date);
 
+-- Restore data
+INSERT INTO reminder_email_log (id, user_id, reminder_id, occurrence_date, sent_at)
+SELECT id, user_id, reminder_id, occurrence_date, sent_at
+FROM reminder_email_log_backup;
+
+-- Drop backup table
+DROP TABLE IF EXISTS reminder_email_log_backup;
+
 -- 2. Add index for reminder_user_state queries to optimize lookups
-CREATE INDEX IF NOT EXISTS idx_reminder_user_state_user_reminder_date
+CREATE INDEX IF NOT EXISTS idx_reminder_user_state_lookup
   ON reminder_user_state(user_id, reminder_id, occurrence_date);
 
 -- 3. Add CHECK constraint for mutually exclusive snoozed/ignored states
@@ -20,7 +45,7 @@ CREATE TABLE IF NOT EXISTS reminder_user_state_backup AS
   SELECT * FROM reminder_user_state;
 
 -- Drop old table
-DROP TABLE reminder_user_state;
+DROP TABLE IF EXISTS reminder_user_state;
 
 -- Recreate table with CHECK constraint
 CREATE TABLE IF NOT EXISTS reminder_user_state (
@@ -44,8 +69,8 @@ SELECT user_id, reminder_id, occurrence_date,
 FROM reminder_user_state_backup;
 
 -- Drop backup table
-DROP TABLE reminder_user_state_backup;
+DROP TABLE IF EXISTS reminder_user_state_backup;
 
 -- Recreate index for reminder_user_state
-CREATE INDEX IF NOT EXISTS idx_reminder_user_state_user_reminder_date
+CREATE INDEX IF NOT EXISTS idx_reminder_user_state_lookup
   ON reminder_user_state(user_id, reminder_id, occurrence_date);
