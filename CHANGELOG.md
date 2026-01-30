@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.0](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.9.1...echo-hub-v1.10.0) (2026-01-30)
+
+
+### Features
+
+* **echo-hub:** add drag-and-drop reordering for grid view ([#72](https://github.com/unstable-studios/echo-core/issues/72)) ([9634e57](https://github.com/unstable-studios/echo-core/commit/9634e57dd9c43ccbd636e7cee5a823823d47cb6a))
+
 ## [1.9.1](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.9.0...echo-hub-v1.9.1) (2026-01-29)
 
 
