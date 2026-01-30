@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.1](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.11.0...echo-hub-v1.11.1) (2026-01-30)
+
+
+### Bug Fixes
+
+* **echo-hub:** recreate tables instead of dropping auto-indexes ([#77](https://github.com/unstable-studios/echo-core/issues/77)) ([be82ab9](https://github.com/unstable-studios/echo-core/commit/be82ab911c10f22e8b516ac6538cc43c745f471e))
+
 ## [1.11.0](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.10.0...echo-hub-v1.11.0) (2026-01-30)
 
 
