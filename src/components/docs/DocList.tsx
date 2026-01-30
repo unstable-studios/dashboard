@@ -55,6 +55,7 @@ export function DocList({ documents, loading, isAdmin, userFavorites, viewMode =
 				<SortableList
 					items={documents}
 					onReorder={onReorder}
+					layout="list"
 					renderItem={(doc, dragHandleProps) => (
 						<DocListItem
 							doc={doc}
@@ -83,6 +84,27 @@ export function DocList({ documents, loading, isAdmin, userFavorites, viewMode =
 					/>
 				))}
 			</div>
+		);
+	}
+
+	if (onReorder) {
+		return (
+			<SortableList
+				items={documents}
+				onReorder={onReorder}
+				layout="grid"
+				renderItem={(doc, dragHandleProps) => (
+					<DocCard
+						doc={doc}
+						isAdmin={isAdmin}
+						isUserPinned={userFavorites?.includes(doc.id)}
+						onEdit={onEdit}
+						onDelete={onDelete}
+						onTogglePin={onTogglePin}
+						dragHandleProps={dragHandleProps}
+					/>
+				)}
+			/>
 		);
 	}
 

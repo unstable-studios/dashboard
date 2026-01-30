@@ -65,6 +65,7 @@ export function LinksGrid({
 				<SortableList
 					items={links}
 					onReorder={onReorder}
+					layout="list"
 					renderItem={(link, dragHandleProps) => (
 						<LinkListItem
 							link={link}
@@ -93,6 +94,27 @@ export function LinksGrid({
 					/>
 				))}
 			</div>
+		);
+	}
+
+	if (onReorder) {
+		return (
+			<SortableList
+				items={links}
+				onReorder={onReorder}
+				layout="grid"
+				renderItem={(link, dragHandleProps) => (
+					<LinkCard
+						link={link}
+						isAdmin={isAdmin}
+						isUserPinned={userFavorites.includes(link.id)}
+						onEdit={onEdit}
+						onDelete={onDelete}
+						onTogglePin={onTogglePin}
+						dragHandleProps={dragHandleProps}
+					/>
+				)}
+			/>
 		);
 	}
 

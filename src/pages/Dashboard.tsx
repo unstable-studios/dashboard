@@ -265,7 +265,7 @@ export function Dashboard() {
 									userFavorites={userFavoriteLinks}
 									viewMode={viewMode}
 									onTogglePin={handleToggleLinkPin}
-									onReorder={viewMode === 'list' && hasUserLinkPins ? handleReorderLinks : undefined}
+									onReorder={hasUserLinkPins ? handleReorderLinks : undefined}
 								/>
 							)}
 						</section>
@@ -293,7 +293,7 @@ export function Dashboard() {
 									userFavorites={userFavoriteDocs}
 									viewMode={viewMode}
 									onTogglePin={handleToggleDocPin}
-									onReorder={viewMode === 'list' && hasUserDocPins ? handleReorderDocs : undefined}
+									onReorder={hasUserDocPins ? handleReorderDocs : undefined}
 								/>
 							</section>
 						)}
