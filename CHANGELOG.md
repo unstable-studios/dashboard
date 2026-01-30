@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.0](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.10.0...echo-hub-v1.11.0) (2026-01-30)
+
+
+### Features
+
+* **echo-hub:** add email reminders via Postmark ([#74](https://github.com/unstable-studios/echo-core/issues/74)) ([5cf8aad](https://github.com/unstable-studios/echo-core/commit/5cf8aad7cd6b48c7091612b90ae978ac0a46f72b))
+
 ## [1.10.0](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.9.1...echo-hub-v1.10.0) (2026-01-30)
 
 
