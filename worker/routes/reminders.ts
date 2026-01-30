@@ -59,13 +59,74 @@ reminders.get(
 
 		const { results } = await c.env.DB.prepare(
 			`SELECT r.*, d.title as doc_title, d.slug as doc_slug,
-					rus.snoozed, rus.ignored
+					rus.snoozed, rus.ignored, rus.completed, rus.actioned_at
 			 FROM reminders r
 			 LEFT JOIN documents d ON r.doc_id = d.id
 			 LEFT JOIN reminder_user_state rus ON rus.reminder_id = r.id
 				AND rus.user_id = ? AND rus.occurrence_date = r.next_due
-			 WHERE r.owner_id = ? OR r.is_global = 1
+			 WHERE (r.owner_id = ? OR r.is_global = 1)
+			   AND COALESCE(rus.completed, 0) = 0
+			   AND COALESCE(rus.ignored, 0) = 0
+			   AND COALESCE(rus.snoozed, 0) = 0
 			 ORDER BY r.next_due ASC`
+		)
+			.bind(user.sub, user.sub)
+			.all();
+
+		return c.json({ reminders: results });
+	}
+);
+
+// Get snoozed reminders
+reminders.get(
+	'/snoozed',
+	authMiddleware(),
+	calendarReadMiddleware(),
+	async (c) => {
+		const user = c.get('user');
+
+		const { results } = await c.env.DB.prepare(
+			`SELECT r.*, d.title as doc_title, d.slug as doc_slug,
+					rus.snoozed, rus.ignored, rus.completed, rus.actioned_at
+			 FROM reminders r
+			 LEFT JOIN documents d ON r.doc_id = d.id
+			 INNER JOIN reminder_user_state rus ON rus.reminder_id = r.id
+				AND rus.user_id = ? AND rus.occurrence_date = r.next_due
+			 WHERE (r.owner_id = ? OR r.is_global = 1)
+			   AND rus.snoozed = 1
+			   AND COALESCE(rus.completed, 0) = 0
+			   AND COALESCE(rus.ignored, 0) = 0
+			 ORDER BY r.next_due ASC`
+		)
+			.bind(user.sub, user.sub)
+			.all();
+
+		return c.json({ reminders: results });
+	}
+);
+
+// Get history of completed/dismissed reminders (last 90 days)
+reminders.get(
+	'/history',
+	authMiddleware(),
+	calendarReadMiddleware(),
+	async (c) => {
+		const user = c.get('user');
+
+		const { results } = await c.env.DB.prepare(
+			`SELECT r.id, r.title, r.description, r.rrule, r.advance_notice_days,
+					r.doc_id, r.is_global, r.owner_id, r.created_at, r.updated_at,
+					d.title as doc_title, d.slug as doc_slug,
+					rus.occurrence_date as next_due,
+					rus.completed, rus.ignored, rus.snoozed, rus.actioned_at
+			 FROM reminder_user_state rus
+			 INNER JOIN reminders r ON rus.reminder_id = r.id
+			 LEFT JOIN documents d ON r.doc_id = d.id
+			 WHERE rus.user_id = ?
+			   AND (rus.completed = 1 OR rus.ignored = 1)
+			   AND rus.actioned_at >= date('now', '-90 days')
+			   AND (r.owner_id = ? OR r.is_global = 1)
+			 ORDER BY rus.actioned_at DESC`
 		)
 			.bind(user.sub, user.sub)
 			.all();
@@ -85,7 +146,7 @@ reminders.get(
 
 		const reminder = await c.env.DB.prepare(
 			`SELECT r.*, d.title as doc_title, d.slug as doc_slug,
-					rus.snoozed, rus.ignored
+					rus.snoozed, rus.ignored, rus.completed, rus.actioned_at
 			 FROM reminders r
 			 LEFT JOIN documents d ON r.doc_id = d.id
 			 LEFT JOIN reminder_user_state rus ON rus.reminder_id = r.id
@@ -364,6 +425,43 @@ function getToday(): string {
 	return new Date().toISOString().split('T')[0];
 }
 
+// Calculate next occurrence from RRULE
+function calculateNextOccurrence(rrule: string, currentDue: string): string | null {
+	const current = new Date(currentDue + 'T00:00:00Z');
+
+	// Parse RRULE components
+	const parts = rrule.split(';').reduce(
+		(acc, part) => {
+			const [key, value] = part.split('=');
+			acc[key] = value;
+			return acc;
+		},
+		{} as Record<string, string>
+	);
+
+	const freq = parts['FREQ'];
+	const interval = parseInt(parts['INTERVAL'] || '1', 10);
+
+	switch (freq) {
+		case 'DAILY':
+			current.setUTCDate(current.getUTCDate() + interval);
+			break;
+		case 'WEEKLY':
+			current.setUTCDate(current.getUTCDate() + 7 * interval);
+			break;
+		case 'MONTHLY':
+			current.setUTCMonth(current.getUTCMonth() + interval);
+			break;
+		case 'YEARLY':
+			current.setUTCFullYear(current.getUTCFullYear() + interval);
+			break;
+		default:
+			return null;
+	}
+
+	return current.toISOString().split('T')[0];
+}
+
 // Snooze a reminder (no emails until due date)
 reminders.post(
 	'/:id/snooze',
@@ -441,7 +539,7 @@ reminders.delete(
 	}
 );
 
-// Ignore a reminder occurrence (no more emails for this occurrence)
+// Ignore/Dismiss a reminder occurrence (no more emails for this occurrence)
 reminders.post(
 	'/:id/ignore',
 	authMiddleware(),
@@ -452,27 +550,42 @@ reminders.post(
 
 		// Get the reminder
 		const reminder = await c.env.DB.prepare(
-			`SELECT id, next_due FROM reminders
+			`SELECT id, next_due, rrule FROM reminders
 			 WHERE id = ? AND (owner_id = ? OR is_global = 1)`
 		)
 			.bind(id, user.sub)
-			.first<{ id: number; next_due: string }>();
+			.first<{ id: number; next_due: string; rrule: string | null }>();
 
 		if (!reminder) {
 			return c.json({ error: 'Reminder not found' }, 404);
 		}
 
-		// Set ignored state
+		const now = new Date().toISOString();
+
+		// Set ignored state with actioned_at timestamp
 		await c.env.DB.prepare(
-			`INSERT INTO reminder_user_state (user_id, reminder_id, occurrence_date, snoozed, ignored)
-			 VALUES (?, ?, ?, 0, 1)
+			`INSERT INTO reminder_user_state (user_id, reminder_id, occurrence_date, snoozed, ignored, completed, actioned_at)
+			 VALUES (?, ?, ?, 0, 1, 0, ?)
 			 ON CONFLICT (user_id, reminder_id, occurrence_date)
-			 DO UPDATE SET ignored = 1`
+			 DO UPDATE SET ignored = 1, actioned_at = ?`
 		)
-			.bind(user.sub, reminder.id, reminder.next_due)
+			.bind(user.sub, reminder.id, reminder.next_due, now, now)
 			.run();
 
-		return c.json({ success: true, ignored: true });
+		// If recurring, advance to next occurrence
+		let nextDue: string | null = null;
+		if (reminder.rrule) {
+			nextDue = calculateNextOccurrence(reminder.rrule, reminder.next_due);
+			if (nextDue) {
+				await c.env.DB.prepare(
+					`UPDATE reminders SET next_due = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+				)
+					.bind(nextDue, reminder.id)
+					.run();
+			}
+		}
+
+		return c.json({ success: true, ignored: true, next_due: nextDue });
 	}
 );
 
@@ -506,6 +619,89 @@ reminders.delete(
 			.run();
 
 		return c.json({ success: true, ignored: false });
+	}
+);
+
+// Complete a reminder (mark done, advance recurring to next occurrence)
+reminders.post(
+	'/:id/complete',
+	authMiddleware(),
+	calendarReadMiddleware(),
+	async (c) => {
+		const id = c.req.param('id');
+		const user = c.get('user');
+
+		// Get the reminder
+		const reminder = await c.env.DB.prepare(
+			`SELECT id, next_due, rrule FROM reminders
+			 WHERE id = ? AND (owner_id = ? OR is_global = 1)`
+		)
+			.bind(id, user.sub)
+			.first<{ id: number; next_due: string; rrule: string | null }>();
+
+		if (!reminder) {
+			return c.json({ error: 'Reminder not found' }, 404);
+		}
+
+		const now = new Date().toISOString();
+
+		// Set completed state with actioned_at timestamp
+		await c.env.DB.prepare(
+			`INSERT INTO reminder_user_state (user_id, reminder_id, occurrence_date, snoozed, ignored, completed, actioned_at)
+			 VALUES (?, ?, ?, 0, 0, 1, ?)
+			 ON CONFLICT (user_id, reminder_id, occurrence_date)
+			 DO UPDATE SET completed = 1, actioned_at = ?`
+		)
+			.bind(user.sub, reminder.id, reminder.next_due, now, now)
+			.run();
+
+		// If recurring, advance to next occurrence
+		let nextDue: string | null = null;
+		if (reminder.rrule) {
+			nextDue = calculateNextOccurrence(reminder.rrule, reminder.next_due);
+			if (nextDue) {
+				await c.env.DB.prepare(
+					`UPDATE reminders SET next_due = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+				)
+					.bind(nextDue, reminder.id)
+					.run();
+			}
+		}
+
+		return c.json({ success: true, completed: true, next_due: nextDue });
+	}
+);
+
+// Uncomplete a reminder (only for current occurrence)
+reminders.delete(
+	'/:id/complete',
+	authMiddleware(),
+	calendarReadMiddleware(),
+	async (c) => {
+		const id = c.req.param('id');
+		const user = c.get('user');
+
+		// Get the reminder
+		const reminder = await c.env.DB.prepare(
+			`SELECT id, next_due FROM reminders
+			 WHERE id = ? AND (owner_id = ? OR is_global = 1)`
+		)
+			.bind(id, user.sub)
+			.first<{ id: number; next_due: string }>();
+
+		if (!reminder) {
+			return c.json({ error: 'Reminder not found' }, 404);
+		}
+
+		// Remove completed state
+		await c.env.DB.prepare(
+			`UPDATE reminder_user_state SET completed = 0, actioned_at = NULL
+			 WHERE user_id = ? AND reminder_id = ? AND occurrence_date = ?`
+		)
+			.bind(user.sub, reminder.id, reminder.next_due)
+			.run();
+
+		return c.json({ success: true, completed: false });
 	}
 );
 

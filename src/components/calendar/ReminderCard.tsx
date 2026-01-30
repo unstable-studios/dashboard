@@ -8,7 +8,7 @@ import {
 	ContextMenuSeparator,
 	ContextMenuTrigger,
 } from '@/components/ui/context-menu';
-import { Bell, Globe, User, FileText, Pencil, Trash2, Calendar, BellOff, X } from 'lucide-react';
+import { Bell, Globe, User, FileText, Pencil, Trash2, Calendar, BellOff, XCircle, CheckCircle } from 'lucide-react';
 import { formatRecurrence, formatDate, isPastDue, isUpcoming, isDueToday } from '@/lib/calendar';
 
 export interface Reminder {
@@ -27,6 +27,8 @@ export interface Reminder {
 	updated_at: string;
 	snoozed: number | null;
 	ignored: number | null;
+	completed: number | null;
+	actioned_at: string | null;
 }
 
 export interface CalendarPermissions {
@@ -43,24 +45,32 @@ interface ReminderCardProps {
 	reminder: Reminder;
 	currentUserId: string;
 	permissions: CalendarPermissions;
+	isHistory?: boolean;
+	isSnoozed?: boolean;
 	onEdit?: (reminder: Reminder) => void;
 	onDelete?: (reminder: Reminder) => void;
 	onSnooze?: (reminder: Reminder) => void;
 	onUnsnooze?: (reminder: Reminder) => void;
 	onIgnore?: (reminder: Reminder) => void;
 	onUnignore?: (reminder: Reminder) => void;
+	onComplete?: (reminder: Reminder) => void;
+	onUncomplete?: (reminder: Reminder) => void;
 }
 
 export function ReminderCard({
 	reminder,
 	currentUserId,
 	permissions,
+	isHistory,
+	isSnoozed: isSnoozedView,
 	onEdit,
 	onDelete,
 	onSnooze,
 	onUnsnooze,
 	onIgnore,
 	onUnignore,
+	onComplete,
+	onUncomplete,
 }: ReminderCardProps) {
 	const navigate = useNavigate();
 	const isOwner = reminder.owner_id === currentUserId;
@@ -71,7 +81,8 @@ export function ReminderCard({
 	const recurrence = formatRecurrence(reminder.rrule);
 	const isSnoozed = reminder.snoozed === 1;
 	const isIgnored = reminder.ignored === 1;
-	const showActionButtons = upcoming && !pastDue;
+	const isCompleted = reminder.completed === 1;
+	const showActionButtons = ((upcoming || pastDue) && !isHistory) || isSnoozedView;
 
 	// Determine if user can edit/delete this reminder
 	const canEdit = isGlobal || !isOwner
@@ -91,11 +102,11 @@ export function ReminderCard({
 		<ContextMenu>
 			<ContextMenuTrigger asChild>
 				<div className="block cursor-default">
-					<Card className={`h-full transition-colors ${pastDue ? 'border-destructive/50 bg-destructive/5' : upcoming ? 'border-amber-500/50 bg-amber-500/5' : ''}`}>
+					<Card className={`h-full transition-colors ${isCompleted ? 'border-green-500/50 bg-green-500/5' : pastDue ? 'border-destructive/50 bg-destructive/5' : upcoming ? 'border-amber-500/50 bg-amber-500/5' : ''}`}>
 						<CardHeader className="p-6 space-y-3">
 							<div className="flex items-start justify-between gap-3">
 								<div className="flex items-start gap-3 min-w-0">
-									<Bell className={`h-6 w-6 shrink-0 mt-0.5 ${pastDue ? 'text-destructive' : upcoming ? 'text-amber-500' : 'text-muted-foreground'}`} />
+									<Bell className={`h-6 w-6 shrink-0 mt-0.5 ${isCompleted ? 'text-green-500' : pastDue ? 'text-destructive' : upcoming ? 'text-amber-500' : 'text-muted-foreground'}`} />
 									<CardTitle className="text-lg font-semibold leading-tight">
 										{reminder.title}
 									</CardTitle>
@@ -116,7 +127,7 @@ export function ReminderCard({
 								</CardDescription>
 							)}
 							<div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-								<span className={`flex items-center gap-1 ${pastDue ? 'text-destructive font-medium' : upcoming ? 'text-amber-600 dark:text-amber-400 font-medium' : ''}`}>
+								<span className={`flex items-center gap-1 ${isCompleted ? 'text-green-600 dark:text-green-400 font-medium' : pastDue ? 'text-destructive font-medium' : upcoming ? 'text-amber-600 dark:text-amber-400 font-medium' : ''}`}>
 									<Calendar className="h-3 w-3" />
 									{formatDate(reminder.next_due)}
 									{pastDue && ' (Past due)'}
@@ -134,8 +145,14 @@ export function ReminderCard({
 								)}
 								{isIgnored && (
 									<span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded flex items-center gap-1">
-										<X className="h-3 w-3" />
-										Ignored
+										<XCircle className="h-3 w-3" />
+										Dismissed
+									</span>
+								)}
+								{isCompleted && (
+									<span className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded flex items-center gap-1">
+										<CheckCircle className="h-3 w-3" />
+										Completed
 									</span>
 								)}
 								{reminder.doc_title && (
@@ -149,36 +166,52 @@ export function ReminderCard({
 								)}
 							</div>
 							{showActionButtons && (
-								<div className="flex gap-2 pt-2">
-									{!isSnoozed && !isIgnored && (
+								<div className="flex flex-wrap gap-2 pt-2">
+									{!isSnoozed && !isIgnored && !isCompleted && (
 										<>
 											<Button
-												variant="outline"
+												variant="default"
 												size="sm"
 												onClick={(e) => {
 													e.stopPropagation();
-													onSnooze?.(reminder);
+													onComplete?.(reminder);
 												}}
-												disabled={dueToday}
-												title={dueToday ? "Cannot snooze reminder due today" : "Snooze until due date"}
+												title="Mark as complete"
 												className="gap-1"
 											>
-												<BellOff className="h-3 w-3" />
-												Snooze
+												<CheckCircle className="h-3 w-3" />
+												Complete
 											</Button>
-											<Button
-												variant="outline"
-												size="sm"
-												onClick={(e) => {
-													e.stopPropagation();
-													onIgnore?.(reminder);
-												}}
-												title="Ignore this occurrence"
-												className="gap-1"
-											>
-												<X className="h-3 w-3" />
-												Ignore
-											</Button>
+											{upcoming && !dueToday && (
+												<Button
+													variant="outline"
+													size="sm"
+													onClick={(e) => {
+														e.stopPropagation();
+														onSnooze?.(reminder);
+													}}
+													title="Snooze until due date"
+													className="gap-1"
+												>
+													<BellOff className="h-3 w-3" />
+													Snooze
+												</Button>
+											)}
+											{pastDue && (
+												<Button
+													variant="outline"
+													size="sm"
+													onClick={(e) => {
+														e.stopPropagation();
+														onIgnore?.(reminder);
+													}}
+													title="Dismiss this occurrence"
+													className="gap-1"
+												>
+													<XCircle className="h-3 w-3" />
+													Dismiss
+												</Button>
+											)}
 										</>
 									)}
 									{isSnoozed && (
@@ -206,7 +239,21 @@ export function ReminderCard({
 											className="gap-1"
 										>
 											<Bell className="h-3 w-3" />
-											Unignore
+											Restore
+										</Button>
+									)}
+									{isCompleted && (
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={(e) => {
+												e.stopPropagation();
+												onUncomplete?.(reminder);
+											}}
+											className="gap-1"
+										>
+											<Bell className="h-3 w-3" />
+											Restore
 										</Button>
 									)}
 								</div>
@@ -222,7 +269,34 @@ export function ReminderCard({
 						View Document
 					</ContextMenuItem>
 				)}
-				{(canEdit || canDelete) && (
+				{isHistory && (isCompleted || isIgnored) && (
+					<>
+						{reminder.doc_slug && <ContextMenuSeparator />}
+						{isCompleted && onUncomplete && (
+							<ContextMenuItem
+								onClick={(e) => {
+									e.stopPropagation();
+									onUncomplete(reminder);
+								}}
+							>
+								<Bell className="h-4 w-4 mr-2" />
+								Restore
+							</ContextMenuItem>
+						)}
+						{isIgnored && onUnignore && (
+							<ContextMenuItem
+								onClick={(e) => {
+									e.stopPropagation();
+									onUnignore(reminder);
+								}}
+							>
+								<Bell className="h-4 w-4 mr-2" />
+								Restore
+							</ContextMenuItem>
+						)}
+					</>
+				)}
+				{(canEdit || canDelete) && !isHistory && (
 					<>
 						{reminder.doc_slug && <ContextMenuSeparator />}
 						{canEdit && onEdit && (
