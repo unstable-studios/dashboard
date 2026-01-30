@@ -50,7 +50,7 @@ function SortableItem({ id, children, isAnyDragging }: SortableItemProps) {
 		<div
 			ref={setNodeRef}
 			style={style}
-			className={isAnyDragging ? '[&_a]:pointer-events-none' : ''}
+			className={`h-full ${isAnyDragging ? '[&_a]:pointer-events-none' : ''}`}
 		>
 			{children({ listeners, attributes })}
 		</div>
