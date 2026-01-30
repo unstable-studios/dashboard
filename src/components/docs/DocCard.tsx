@@ -7,6 +7,7 @@ import {
 	ContextMenuSeparator,
 	ContextMenuTrigger,
 } from '@/components/ui/context-menu';
+import { DragHandle, DragHandleProps } from '@/components/ui/sortable-list';
 import { FileText, ExternalLink, Pencil, Trash2, Eye, Pin, PinOff } from 'lucide-react';
 
 export interface Document {
@@ -34,9 +35,10 @@ interface DocCardProps {
 	onEdit?: (doc: Document) => void;
 	onDelete?: (doc: Document) => void;
 	onTogglePin?: (doc: Document) => void;
+	dragHandleProps?: DragHandleProps;
 }
 
-export function DocCard({ doc, isAdmin, isUserPinned, onEdit, onDelete, onTogglePin }: DocCardProps) {
+export function DocCard({ doc, isAdmin, isUserPinned, onEdit, onDelete, onTogglePin, dragHandleProps }: DocCardProps) {
 	const navigate = useNavigate();
 	const isExternal = !!doc.external_url;
 
@@ -59,7 +61,8 @@ export function DocCard({ doc, isAdmin, isUserPinned, onEdit, onDelete, onToggle
 	return (
 		<ContextMenu>
 			<ContextMenuTrigger asChild>
-				<div onClick={handleClick} className="block cursor-pointer">
+				<div onClick={handleClick} className="block cursor-pointer group relative h-full">
+					<DragHandle dragHandleProps={dragHandleProps} variant="grid" />
 					<Card className="h-full transition-colors hover:bg-muted/50">
 						<CardHeader className="p-6 space-y-3">
 							<div className="flex items-start justify-between gap-3">

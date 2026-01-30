@@ -14,6 +14,7 @@ import {
 	sortableKeyboardCoordinates,
 	useSortable,
 	verticalListSortingStrategy,
+	rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical } from 'lucide-react';
@@ -49,7 +50,7 @@ function SortableItem({ id, children, isAnyDragging }: SortableItemProps) {
 		<div
 			ref={setNodeRef}
 			style={style}
-			className={isAnyDragging ? '[&_a]:pointer-events-none' : ''}
+			className={`h-full ${isAnyDragging ? '[&_a]:pointer-events-none' : ''}`}
 		>
 			{children({ listeners, attributes })}
 		</div>
@@ -61,6 +62,8 @@ interface SortableListProps<T extends { id: number }> {
 	onReorder: (orderedIds: number[]) => void;
 	renderItem: (item: T, dragHandleProps: DragHandleProps) => React.ReactNode;
 	disabled?: boolean;
+	layout?: 'list' | 'grid';
+	className?: string;
 }
 
 export function SortableList<T extends { id: number }>({
@@ -68,6 +71,8 @@ export function SortableList<T extends { id: number }>({
 	onReorder,
 	renderItem,
 	disabled = false,
+	layout = 'list',
+	className,
 }: SortableListProps<T>) {
 	const [isDragging, setIsDragging] = useState(false);
 
@@ -107,9 +112,16 @@ export function SortableList<T extends { id: number }>({
 		}
 	};
 
+	const defaultClassName = layout === 'grid'
+		? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'
+		: 'space-y-2';
+
+	const containerClassName = className || defaultClassName;
+	const strategy = layout === 'grid' ? rectSortingStrategy : verticalListSortingStrategy;
+
 	if (disabled) {
 		return (
-			<div className="space-y-2">
+			<div className={containerClassName}>
 				{items.map((item) => (
 					<React.Fragment key={item.id}>
 						{renderItem(item, {})}
@@ -128,9 +140,9 @@ export function SortableList<T extends { id: number }>({
 		>
 			<SortableContext
 				items={items.map((item) => item.id)}
-				strategy={verticalListSortingStrategy}
+				strategy={strategy}
 			>
-				<div className="space-y-2">
+				<div className={containerClassName}>
 					{items.map((item) => (
 						<SortableItem key={item.id} id={item.id} isAnyDragging={isDragging}>
 							{(dragHandleProps) => renderItem(item, dragHandleProps)}
@@ -144,11 +156,26 @@ export function SortableList<T extends { id: number }>({
 
 interface DragHandleButtonProps {
 	dragHandleProps?: DragHandleProps;
+	variant?: 'list' | 'grid';
 }
 
-export function DragHandle({ dragHandleProps }: DragHandleButtonProps) {
+export function DragHandle({ dragHandleProps, variant = 'list' }: DragHandleButtonProps) {
 	if (!dragHandleProps?.listeners || !dragHandleProps?.attributes) {
 		return null;
+	}
+
+	if (variant === 'grid') {
+		return (
+			<button
+				type="button"
+				aria-label="Drag to reorder"
+				className="absolute top-2 right-2 cursor-grab touch-none p-1.5 rounded-md bg-background/80 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-foreground hover:bg-background active:cursor-grabbing transition-opacity z-10"
+				{...dragHandleProps.attributes}
+				{...dragHandleProps.listeners}
+			>
+				<GripVertical className="h-4 w-4" />
+			</button>
+		);
 	}
 
 	return (

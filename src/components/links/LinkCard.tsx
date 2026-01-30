@@ -6,6 +6,7 @@ import {
 	ContextMenuSeparator,
 	ContextMenuTrigger,
 } from '@/components/ui/context-menu';
+import { DragHandle, DragHandleProps } from '@/components/ui/sortable-list';
 import { ExternalLink, Pin, PinOff, Pencil, Trash2 } from 'lucide-react';
 
 export interface ServiceLink {
@@ -29,6 +30,7 @@ interface LinkCardProps {
 	onEdit?: (link: ServiceLink) => void;
 	onDelete?: (link: ServiceLink) => void;
 	onTogglePin?: (link: ServiceLink) => void;
+	dragHandleProps?: DragHandleProps;
 }
 
 export function LinkCard({
@@ -38,6 +40,7 @@ export function LinkCard({
 	onEdit,
 	onDelete,
 	onTogglePin,
+	dragHandleProps,
 }: LinkCardProps) {
 	const handleClick = () => {
 		// Open link in new tab
@@ -47,7 +50,8 @@ export function LinkCard({
 	return (
 		<ContextMenu>
 			<ContextMenuTrigger asChild>
-				<div onClick={handleClick} className="block cursor-pointer">
+				<div onClick={handleClick} className="block cursor-pointer group relative h-full">
+					<DragHandle dragHandleProps={dragHandleProps} variant="grid" />
 					<Card className="hover:bg-accent transition-colors h-full">
 						<CardContent className="p-6">
 							<div className="flex items-start gap-4">
