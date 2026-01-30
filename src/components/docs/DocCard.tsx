@@ -61,7 +61,7 @@ export function DocCard({ doc, isAdmin, isUserPinned, onEdit, onDelete, onToggle
 	return (
 		<ContextMenu>
 			<ContextMenuTrigger asChild>
-				<div onClick={handleClick} className="block cursor-pointer group relative">
+				<div onClick={handleClick} className="block cursor-pointer group relative h-full">
 					<DragHandle dragHandleProps={dragHandleProps} variant="grid" />
 					<Card className="h-full transition-colors hover:bg-muted/50">
 						<CardHeader className="p-6 space-y-3">

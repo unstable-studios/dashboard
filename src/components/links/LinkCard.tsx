@@ -50,7 +50,7 @@ export function LinkCard({
 	return (
 		<ContextMenu>
 			<ContextMenuTrigger asChild>
-				<div onClick={handleClick} className="block cursor-pointer group relative">
+				<div onClick={handleClick} className="block cursor-pointer group relative h-full">
 					<DragHandle dragHandleProps={dragHandleProps} variant="grid" />
 					<Card className="hover:bg-accent transition-colors h-full">
 						<CardContent className="p-6">
