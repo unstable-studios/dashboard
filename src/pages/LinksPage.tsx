@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ViewToggle } from '@/components/ui/view-toggle';
 import { authFetch } from '@/lib/auth';
 import { useViewPreference } from '@/hooks/useViewPreference';
+import { useDynamicFilterPreference } from '@/hooks/useFilterPreference';
 import { Plus } from 'lucide-react';
 
 interface Category {
@@ -23,7 +24,7 @@ export function LinksPage() {
 	const [viewMode, setViewMode] = useViewPreference('links');
 	const [links, setLinks] = useState<ServiceLink[]>([]);
 	const [categories, setCategories] = useState<Category[]>([]);
-	const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+	const [selectedCategorySlug, setSelectedCategorySlug] = useDynamicFilterPreference('links-category');
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [isAdmin, setIsAdmin] = useState(false);
@@ -122,6 +123,11 @@ export function LinksPage() {
 		fetchData();
 	};
 
+	// Find category ID from slug for filtering
+	const selectedCategory = selectedCategorySlug
+		? categories.find((c) => c.slug === selectedCategorySlug)?.id ?? null
+		: null;
+
 	const filteredLinks = selectedCategory
 		? links.filter((link) => link.category_id === selectedCategory)
 		: links;
@@ -150,18 +156,18 @@ export function LinksPage() {
 				{/* Category filter */}
 				<div className="flex flex-wrap gap-2">
 					<Button
-						variant={selectedCategory === null ? 'secondary' : 'outline'}
+						variant={selectedCategorySlug === null ? 'secondary' : 'outline'}
 						size="sm"
-						onClick={() => setSelectedCategory(null)}
+						onClick={() => setSelectedCategorySlug(null)}
 					>
 						All
 					</Button>
 					{categories.map((category) => (
 						<Button
 							key={category.id}
-							variant={selectedCategory === category.id ? 'secondary' : 'outline'}
+							variant={selectedCategorySlug === category.slug ? 'secondary' : 'outline'}
 							size="sm"
-							onClick={() => setSelectedCategory(category.id)}
+							onClick={() => setSelectedCategorySlug(category.slug)}
 						>
 							{category.icon && <span className="mr-1">{category.icon}</span>}
 							{category.name}

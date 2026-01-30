@@ -10,6 +10,7 @@ import { ViewToggle } from '@/components/ui/view-toggle';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { authFetch } from '@/lib/auth';
 import { useViewPreference } from '@/hooks/useViewPreference';
+import { useFilterPreference } from '@/hooks/useFilterPreference';
 import { Plus, Bell, Settings, History, BellOff } from 'lucide-react';
 
 interface Document {
@@ -45,7 +46,11 @@ export function CalendarPage() {
 	const [currentUserId, setCurrentUserId] = useState('');
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
-	const [filter, setFilter] = useState<'all' | 'upcoming' | 'past' | 'snoozed' | 'history'>('all');
+	const [filter, setFilter] = useFilterPreference(
+		'reminders',
+		'all',
+		['all', 'upcoming', 'past', 'snoozed', 'history'] as const
+	);
 
 	const fetchData = async () => {
 		try {
