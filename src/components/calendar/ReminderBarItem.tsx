@@ -6,6 +6,7 @@ import {
 	ContextMenuSeparator,
 	ContextMenuTrigger,
 } from '@/components/ui/context-menu';
+import { MarqueeText } from '@/components/ui/marquee-text';
 import { Bell, Globe, User, FileText, Pencil, Trash2, Calendar, BellOff, X } from 'lucide-react';
 import { Reminder, CalendarPermissions } from './ReminderCard';
 import { formatRecurrence, formatDate, isPastDue, isUpcoming } from '@/lib/calendar';
@@ -45,22 +46,47 @@ export function ReminderBarItem({
 		? permissions.canDeleteGlobal
 		: permissions.canDeleteUser;
 
+	const handleClick = () => {
+		navigate('/calendar');
+	};
+
+	const handleKeyDown = (e: React.KeyboardEvent) => {
+		if (e.key === 'Enter' || e.key === ' ') {
+			e.preventDefault();
+			navigate('/calendar');
+		}
+	};
+
 	const handleDocClick = () => {
 		if (reminder.doc_slug) {
 			navigate(`/docs/${reminder.doc_slug}`);
 		}
 	};
 
+	// Build className based on state
+	const baseClasses = 'group flex items-center gap-2 px-3 py-2 h-14 rounded-md border bg-card transition-colors min-w-0 cursor-pointer';
+	const stateClasses = pastDue
+		? 'border-destructive/50 bg-destructive/5 hover:bg-destructive/10'
+		: upcoming
+		? 'border-amber-500/50 bg-amber-500/5 hover:bg-amber-500/10'
+		: 'hover:bg-accent';
+
 	return (
 		<ContextMenu>
 			<ContextMenuTrigger asChild>
 				<div
-					className={`flex items-center gap-2 px-3 py-2 rounded-md border bg-card hover:bg-accent transition-colors min-w-0 cursor-default ${pastDue ? 'border-destructive/50 bg-destructive/5' : upcoming ? 'border-amber-500/50 bg-amber-500/5' : ''}`}
+					role="button"
+					tabIndex={0}
+					onClick={handleClick}
+					onKeyDown={handleKeyDown}
+					className={`${baseClasses} ${stateClasses}`}
 				>
 					<Bell className={`h-4 w-4 flex-shrink-0 ${pastDue ? 'text-destructive' : upcoming ? 'text-amber-500' : 'text-muted-foreground'}`} />
 					<div className="flex-1 min-w-0">
-						<div className="flex items-center gap-1.5">
-							<span className="font-medium text-sm truncate">{reminder.title}</span>
+						<div className="flex items-center gap-1.5 min-w-0">
+							<MarqueeText className="font-medium text-sm flex-1 min-w-0">
+								{reminder.title}
+							</MarqueeText>
 							{isGlobal ? (
 								<Globe className="h-2.5 w-2.5 text-muted-foreground flex-shrink-0" />
 							) : (
@@ -86,15 +112,19 @@ export function ReminderBarItem({
 				</div>
 			</ContextMenuTrigger>
 			<ContextMenuContent className="w-48">
+				<ContextMenuItem onClick={handleClick}>
+					<Calendar className="h-4 w-4 mr-2" />
+					View in Calendar
+				</ContextMenuItem>
 				{reminder.doc_slug && (
 					<ContextMenuItem onClick={handleDocClick}>
 						<FileText className="h-4 w-4 mr-2" />
 						View Document
 					</ContextMenuItem>
 				)}
-				{(canEdit || canDelete) && (
+				{((canEdit && onEdit) || (canDelete && onDelete)) && (
 					<>
-						{reminder.doc_slug && <ContextMenuSeparator />}
+						<ContextMenuSeparator />
 						{canEdit && onEdit && (
 							<ContextMenuItem
 								onClick={(e) => {

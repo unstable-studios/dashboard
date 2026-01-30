@@ -6,6 +6,7 @@ import {
 	ContextMenuTrigger,
 } from '@/components/ui/context-menu';
 import { DragHandle, DragHandleProps } from '@/components/ui/sortable-list';
+import { MarqueeText } from '@/components/ui/marquee-text';
 import { ExternalLink, Pin, PinOff, Pencil, Trash2 } from 'lucide-react';
 import { ServiceLink } from './LinkCard';
 
@@ -35,21 +36,23 @@ export function LinkBarItem({
 					href={link.url}
 					target="_blank"
 					rel="noopener noreferrer"
-					className="flex items-center gap-2 px-3 py-2 rounded-md border bg-card hover:bg-accent transition-colors min-w-0"
+					className="group flex items-center gap-2 px-3 py-2 h-14 rounded-md border bg-card hover:bg-accent transition-colors min-w-0"
 				>
 					<DragHandle dragHandleProps={dragHandleProps} />
 					<span className="text-lg flex-shrink-0">{link.icon || '🔗'}</span>
 					<div className="flex-1 min-w-0">
-						<div className="flex items-center gap-1.5">
-							<span className="font-medium text-sm truncate">{link.title}</span>
+						<div className="flex items-center gap-1.5 min-w-0">
+							<MarqueeText className="font-medium text-sm flex-1 min-w-0">
+								{link.title}
+							</MarqueeText>
 							{isUserPinned && (
 								<Pin className="h-2.5 w-2.5 text-primary flex-shrink-0" />
 							)}
 						</div>
 						{link.description && (
-							<p className="text-xs text-muted-foreground truncate">
+							<MarqueeText className="text-xs text-muted-foreground">
 								{link.description}
-							</p>
+							</MarqueeText>
 						)}
 					</div>
 					<ExternalLink className="h-3 w-3 text-muted-foreground flex-shrink-0" />
