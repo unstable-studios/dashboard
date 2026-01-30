@@ -106,6 +106,67 @@ export function CalendarPage() {
 		setDialogOpen(true);
 	};
 
+	const handleSnooze = async (reminder: Reminder) => {
+		try {
+			const res = await authFetch(`/api/reminders/${reminder.id}/snooze`, getAccessTokenSilently, {
+				method: 'POST',
+			});
+			if (!res.ok) {
+				const data = await res.json();
+				throw new Error(data.error || 'Failed to snooze reminder');
+			}
+			fetchData();
+		} catch (err) {
+			console.error('Error snoozing reminder:', err);
+			alert(err instanceof Error ? err.message : 'Failed to snooze reminder');
+		}
+	};
+
+	const handleUnsnooze = async (reminder: Reminder) => {
+		try {
+			const res = await authFetch(`/api/reminders/${reminder.id}/snooze`, getAccessTokenSilently, {
+				method: 'DELETE',
+			});
+			if (!res.ok) {
+				throw new Error('Failed to unsnooze reminder');
+			}
+			fetchData();
+		} catch (err) {
+			console.error('Error unsnoozing reminder:', err);
+			alert('Failed to unsnooze reminder');
+		}
+	};
+
+	const handleIgnore = async (reminder: Reminder) => {
+		try {
+			const res = await authFetch(`/api/reminders/${reminder.id}/ignore`, getAccessTokenSilently, {
+				method: 'POST',
+			});
+			if (!res.ok) {
+				throw new Error('Failed to ignore reminder');
+			}
+			fetchData();
+		} catch (err) {
+			console.error('Error ignoring reminder:', err);
+			alert('Failed to ignore reminder');
+		}
+	};
+
+	const handleUnignore = async (reminder: Reminder) => {
+		try {
+			const res = await authFetch(`/api/reminders/${reminder.id}/ignore`, getAccessTokenSilently, {
+				method: 'DELETE',
+			});
+			if (!res.ok) {
+				throw new Error('Failed to unignore reminder');
+			}
+			fetchData();
+		} catch (err) {
+			console.error('Error unignoring reminder:', err);
+			alert('Failed to unignore reminder');
+		}
+	};
+
 	// Filter reminders
 	const today = new Date();
 	today.setHours(0, 0, 0, 0);
@@ -200,6 +261,10 @@ export function CalendarPage() {
 								viewMode={viewMode}
 								onEdit={handleEdit}
 								onDelete={handleDelete}
+								onSnooze={handleSnooze}
+								onUnsnooze={handleUnsnooze}
+								onIgnore={handleIgnore}
+								onUnignore={handleUnignore}
 								onNewReminder={handleNewReminder}
 								canAddReminder={canAddReminder}
 							/>

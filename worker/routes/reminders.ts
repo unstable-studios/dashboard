@@ -49,7 +49,7 @@ interface Variables {
 
 const reminders = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-// List reminders (user's own + global)
+// List reminders (user's own + global) with user state
 reminders.get(
 	'/',
 	authMiddleware(),
@@ -58,20 +58,23 @@ reminders.get(
 		const user = c.get('user');
 
 		const { results } = await c.env.DB.prepare(
-			`SELECT r.*, d.title as doc_title, d.slug as doc_slug
+			`SELECT r.*, d.title as doc_title, d.slug as doc_slug,
+					rus.snoozed, rus.ignored
 			 FROM reminders r
 			 LEFT JOIN documents d ON r.doc_id = d.id
+			 LEFT JOIN reminder_user_state rus ON rus.reminder_id = r.id
+				AND rus.user_id = ? AND rus.occurrence_date = r.next_due
 			 WHERE r.owner_id = ? OR r.is_global = 1
 			 ORDER BY r.next_due ASC`
 		)
-			.bind(user.sub)
+			.bind(user.sub, user.sub)
 			.all();
 
 		return c.json({ reminders: results });
 	}
 );
 
-// Get single reminder
+// Get single reminder with user state
 reminders.get(
 	'/:id',
 	authMiddleware(),
@@ -81,12 +84,15 @@ reminders.get(
 		const user = c.get('user');
 
 		const reminder = await c.env.DB.prepare(
-			`SELECT r.*, d.title as doc_title, d.slug as doc_slug
+			`SELECT r.*, d.title as doc_title, d.slug as doc_slug,
+					rus.snoozed, rus.ignored
 			 FROM reminders r
 			 LEFT JOIN documents d ON r.doc_id = d.id
+			 LEFT JOIN reminder_user_state rus ON rus.reminder_id = r.id
+				AND rus.user_id = ? AND rus.occurrence_date = r.next_due
 			 WHERE r.id = ? AND (r.owner_id = ? OR r.is_global = 1)`
 		)
-			.bind(id, user.sub)
+			.bind(user.sub, id, user.sub)
 			.first();
 
 		if (!reminder) {
@@ -350,6 +356,156 @@ reminders.delete(
 		await c.env.DB.prepare('DELETE FROM reminders WHERE id = ?').bind(id).run();
 
 		return c.json({ success: true });
+	}
+);
+
+// Helper to get today's date in YYYY-MM-DD format
+function getToday(): string {
+	return new Date().toISOString().split('T')[0];
+}
+
+// Snooze a reminder (no emails until due date)
+reminders.post(
+	'/:id/snooze',
+	authMiddleware(),
+	calendarReadMiddleware(),
+	async (c) => {
+		const id = c.req.param('id');
+		const user = c.get('user');
+
+		// Get the reminder
+		const reminder = await c.env.DB.prepare(
+			`SELECT id, next_due FROM reminders
+			 WHERE id = ? AND (owner_id = ? OR is_global = 1)`
+		)
+			.bind(id, user.sub)
+			.first<{ id: number; next_due: string }>();
+
+		if (!reminder) {
+			return c.json({ error: 'Reminder not found' }, 404);
+		}
+
+		// Can't snooze if due today
+		const today = getToday();
+		if (reminder.next_due === today) {
+			return c.json(
+				{ error: 'Cannot snooze a reminder that is due today' },
+				400
+			);
+		}
+
+		// Set snoozed state
+		await c.env.DB.prepare(
+			`INSERT INTO reminder_user_state (user_id, reminder_id, occurrence_date, snoozed, ignored)
+			 VALUES (?, ?, ?, 1, 0)
+			 ON CONFLICT (user_id, reminder_id, occurrence_date)
+			 DO UPDATE SET snoozed = 1`
+		)
+			.bind(user.sub, reminder.id, reminder.next_due)
+			.run();
+
+		return c.json({ success: true, snoozed: true });
+	}
+);
+
+// Remove snooze from a reminder
+reminders.delete(
+	'/:id/snooze',
+	authMiddleware(),
+	calendarReadMiddleware(),
+	async (c) => {
+		const id = c.req.param('id');
+		const user = c.get('user');
+
+		// Get the reminder
+		const reminder = await c.env.DB.prepare(
+			`SELECT id, next_due FROM reminders
+			 WHERE id = ? AND (owner_id = ? OR is_global = 1)`
+		)
+			.bind(id, user.sub)
+			.first<{ id: number; next_due: string }>();
+
+		if (!reminder) {
+			return c.json({ error: 'Reminder not found' }, 404);
+		}
+
+		// Remove snoozed state
+		await c.env.DB.prepare(
+			`UPDATE reminder_user_state SET snoozed = 0
+			 WHERE user_id = ? AND reminder_id = ? AND occurrence_date = ?`
+		)
+			.bind(user.sub, reminder.id, reminder.next_due)
+			.run();
+
+		return c.json({ success: true, snoozed: false });
+	}
+);
+
+// Ignore a reminder occurrence (no more emails for this occurrence)
+reminders.post(
+	'/:id/ignore',
+	authMiddleware(),
+	calendarReadMiddleware(),
+	async (c) => {
+		const id = c.req.param('id');
+		const user = c.get('user');
+
+		// Get the reminder
+		const reminder = await c.env.DB.prepare(
+			`SELECT id, next_due FROM reminders
+			 WHERE id = ? AND (owner_id = ? OR is_global = 1)`
+		)
+			.bind(id, user.sub)
+			.first<{ id: number; next_due: string }>();
+
+		if (!reminder) {
+			return c.json({ error: 'Reminder not found' }, 404);
+		}
+
+		// Set ignored state
+		await c.env.DB.prepare(
+			`INSERT INTO reminder_user_state (user_id, reminder_id, occurrence_date, snoozed, ignored)
+			 VALUES (?, ?, ?, 0, 1)
+			 ON CONFLICT (user_id, reminder_id, occurrence_date)
+			 DO UPDATE SET ignored = 1`
+		)
+			.bind(user.sub, reminder.id, reminder.next_due)
+			.run();
+
+		return c.json({ success: true, ignored: true });
+	}
+);
+
+// Remove ignore from a reminder
+reminders.delete(
+	'/:id/ignore',
+	authMiddleware(),
+	calendarReadMiddleware(),
+	async (c) => {
+		const id = c.req.param('id');
+		const user = c.get('user');
+
+		// Get the reminder
+		const reminder = await c.env.DB.prepare(
+			`SELECT id, next_due FROM reminders
+			 WHERE id = ? AND (owner_id = ? OR is_global = 1)`
+		)
+			.bind(id, user.sub)
+			.first<{ id: number; next_due: string }>();
+
+		if (!reminder) {
+			return c.json({ error: 'Reminder not found' }, 404);
+		}
+
+		// Remove ignored state
+		await c.env.DB.prepare(
+			`UPDATE reminder_user_state SET ignored = 0
+			 WHERE user_id = ? AND reminder_id = ? AND occurrence_date = ?`
+		)
+			.bind(user.sub, reminder.id, reminder.next_due)
+			.run();
+
+		return c.json({ success: true, ignored: false });
 	}
 );
 

@@ -39,3 +39,10 @@ export function isUpcoming(dateStr: string, advanceDays: number): boolean {
 export function isUpcomingOrPastDue(dateStr: string, advanceDays: number): boolean {
 	return isPastDue(dateStr) || isUpcoming(dateStr, advanceDays);
 }
+
+export function isDueToday(dateStr: string): boolean {
+	const today = new Date();
+	today.setHours(0, 0, 0, 0);
+	const dueDate = new Date(dateStr + 'T00:00:00');
+	return dueDate.getTime() === today.getTime();
+}

@@ -7,5 +7,6 @@ declare namespace Cloudflare {
 		AUTH0_CLIENT_SECRET: string;
 		AUTH0_AUDIENCE: string; // e.g., https://hub.unstablestudios.com/api
 		ASSETS: Fetcher; // Static assets binding
+		POSTMARK_API_KEY: string; // Postmark email API key
 	}
 }

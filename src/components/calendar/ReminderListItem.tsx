@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router';
+import { Button } from '@/components/ui/button';
 import {
 	ContextMenu,
 	ContextMenuContent,
@@ -6,9 +7,9 @@ import {
 	ContextMenuSeparator,
 	ContextMenuTrigger,
 } from '@/components/ui/context-menu';
-import { Bell, Globe, User, FileText, Pencil, Trash2, Calendar } from 'lucide-react';
+import { Bell, Globe, User, FileText, Pencil, Trash2, Calendar, BellOff, X } from 'lucide-react';
 import { Reminder, CalendarPermissions } from './ReminderCard';
-import { formatRecurrence, formatDate, isPastDue, isUpcoming } from '@/lib/calendar';
+import { formatRecurrence, formatDate, isPastDue, isUpcoming, isDueToday } from '@/lib/calendar';
 
 interface ReminderListItemProps {
 	reminder: Reminder;
@@ -16,6 +17,10 @@ interface ReminderListItemProps {
 	permissions: CalendarPermissions;
 	onEdit?: (reminder: Reminder) => void;
 	onDelete?: (reminder: Reminder) => void;
+	onSnooze?: (reminder: Reminder) => void;
+	onUnsnooze?: (reminder: Reminder) => void;
+	onIgnore?: (reminder: Reminder) => void;
+	onUnignore?: (reminder: Reminder) => void;
 }
 
 export function ReminderListItem({
@@ -24,13 +29,21 @@ export function ReminderListItem({
 	permissions,
 	onEdit,
 	onDelete,
+	onSnooze,
+	onUnsnooze,
+	onIgnore,
+	onUnignore,
 }: ReminderListItemProps) {
 	const navigate = useNavigate();
 	const isOwner = reminder.owner_id === currentUserId;
 	const isGlobal = reminder.is_global === 1;
 	const pastDue = isPastDue(reminder.next_due);
 	const upcoming = isUpcoming(reminder.next_due, reminder.advance_notice_days);
+	const dueToday = isDueToday(reminder.next_due);
 	const recurrence = formatRecurrence(reminder.rrule);
+	const isSnoozed = reminder.snoozed === 1;
+	const isIgnored = reminder.ignored === 1;
+	const showActionButtons = upcoming && !pastDue;
 
 	const canEdit = isGlobal || !isOwner
 		? permissions.canEditGlobal
@@ -85,6 +98,79 @@ export function ReminderListItem({
 							<span className="text-xs bg-secondary px-2 py-0.5 rounded hidden sm:block">
 								{recurrence}
 							</span>
+						)}
+						{isSnoozed && (
+							<span className="text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded hidden sm:flex items-center gap-1">
+								<BellOff className="h-3 w-3" />
+								Snoozed
+							</span>
+						)}
+						{isIgnored && (
+							<span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded hidden sm:flex items-center gap-1">
+								<X className="h-3 w-3" />
+								Ignored
+							</span>
+						)}
+						{showActionButtons && (
+							<div className="hidden sm:flex gap-1">
+								{!isSnoozed && !isIgnored && (
+									<>
+										<Button
+											variant="ghost"
+											size="sm"
+											onClick={(e) => {
+												e.stopPropagation();
+												onSnooze?.(reminder);
+											}}
+											disabled={dueToday}
+											title={dueToday ? "Cannot snooze reminder due today" : "Snooze until due date"}
+											className="h-7 w-7 p-0"
+										>
+											<BellOff className="h-3.5 w-3.5" />
+										</Button>
+										<Button
+											variant="ghost"
+											size="sm"
+											onClick={(e) => {
+												e.stopPropagation();
+												onIgnore?.(reminder);
+											}}
+											title="Ignore this occurrence"
+											className="h-7 w-7 p-0"
+										>
+											<X className="h-3.5 w-3.5" />
+										</Button>
+									</>
+								)}
+								{isSnoozed && (
+									<Button
+										variant="ghost"
+										size="sm"
+										onClick={(e) => {
+											e.stopPropagation();
+											onUnsnooze?.(reminder);
+										}}
+										title="Unsnooze"
+										className="h-7 w-7 p-0"
+									>
+										<Bell className="h-3.5 w-3.5" />
+									</Button>
+								)}
+								{isIgnored && (
+									<Button
+										variant="ghost"
+										size="sm"
+										onClick={(e) => {
+											e.stopPropagation();
+											onUnignore?.(reminder);
+										}}
+										title="Unignore"
+										className="h-7 w-7 p-0"
+									>
+										<Bell className="h-3.5 w-3.5" />
+									</Button>
+								)}
+							</div>
 						)}
 						<span className={`flex items-center gap-1 text-xs ${pastDue ? 'text-destructive font-medium' : upcoming ? 'text-amber-600 dark:text-amber-400 font-medium' : 'text-muted-foreground'}`}>
 							<Calendar className="h-3 w-3" />

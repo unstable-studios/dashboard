@@ -10,6 +10,8 @@ import preferences from "./routes/preferences";
 import attachments from "./routes/attachments";
 import reminders from "./routes/reminders";
 import calendar from "./routes/calendar";
+import emailActions from "./routes/email-actions";
+import { handleScheduled } from "./scheduled";
 
 interface Variables {
   user: AuthUser;
@@ -85,6 +87,9 @@ app.route("/api/reminders", reminders);
 // Calendar token management
 app.route("/api/calendar", calendar);
 
+// Email action handlers (one-click snooze/ignore from emails)
+app.route("/api/email-action", emailActions);
+
 // iCal feed (token-authenticated, at root level for calendar app compatibility)
 app.get("/calendar.ics", async (c) => {
   // Rewrite to the calendar feed handler with token
@@ -109,4 +114,7 @@ app.all("*", async (c) => {
   return c.env.ASSETS.fetch(c.req.raw);
 });
 
-export default app;
+export default {
+  fetch: app.fetch,
+  scheduled: handleScheduled,
+};

@@ -12,6 +12,10 @@ interface ReminderGridProps {
 	viewMode?: ViewMode;
 	onEdit?: (reminder: Reminder) => void;
 	onDelete?: (reminder: Reminder) => void;
+	onSnooze?: (reminder: Reminder) => void;
+	onUnsnooze?: (reminder: Reminder) => void;
+	onIgnore?: (reminder: Reminder) => void;
+	onUnignore?: (reminder: Reminder) => void;
 	onNewReminder?: () => void;
 	canAddReminder?: boolean;
 }
@@ -24,6 +28,10 @@ export function ReminderGrid({
 	viewMode = 'grid',
 	onEdit,
 	onDelete,
+	onSnooze,
+	onUnsnooze,
+	onIgnore,
+	onUnignore,
 	onNewReminder,
 	canAddReminder,
 }: ReminderGridProps) {
@@ -81,6 +89,10 @@ export function ReminderGrid({
 						permissions={permissions}
 						onEdit={onEdit}
 						onDelete={onDelete}
+						onSnooze={onSnooze}
+						onUnsnooze={onUnsnooze}
+						onIgnore={onIgnore}
+						onUnignore={onUnignore}
 					/>
 				))}
 			</div>
@@ -97,6 +109,10 @@ export function ReminderGrid({
 					permissions={permissions}
 					onEdit={onEdit}
 					onDelete={onDelete}
+					onSnooze={onSnooze}
+					onUnsnooze={onUnsnooze}
+					onIgnore={onIgnore}
+					onUnignore={onUnignore}
 				/>
 			))}
 		</div>
