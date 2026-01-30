@@ -44,9 +44,13 @@
 			"bucket_name": "echo-hub-attachments",
 		},
 	],
+	"triggers": {
+		"crons": ["0 * * * *"]  // Every hour to catch each timezone's 7am
+	},
 	// Auth0 vars loaded from Doppler/environment:
 	// - AUTH0_DOMAIN
 	// - AUTH0_CLIENT_ID
 	// - AUTH0_CLIENT_SECRET
 	// - AUTH0_AUDIENCE
+	// - POSTMARK_API_KEY
 }

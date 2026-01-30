@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import {
 	ContextMenu,
 	ContextMenuContent,
@@ -7,8 +8,8 @@ import {
 	ContextMenuSeparator,
 	ContextMenuTrigger,
 } from '@/components/ui/context-menu';
-import { Bell, Globe, User, FileText, Pencil, Trash2, Calendar } from 'lucide-react';
-import { formatRecurrence, formatDate, isPastDue, isUpcoming } from '@/lib/calendar';
+import { Bell, Globe, User, FileText, Pencil, Trash2, Calendar, BellOff, X } from 'lucide-react';
+import { formatRecurrence, formatDate, isPastDue, isUpcoming, isDueToday } from '@/lib/calendar';
 
 export interface Reminder {
 	id: number;
@@ -24,6 +25,8 @@ export interface Reminder {
 	owner_id: string;
 	created_at: string;
 	updated_at: string;
+	snoozed: number | null;
+	ignored: number | null;
 }
 
 export interface CalendarPermissions {
@@ -42,6 +45,10 @@ interface ReminderCardProps {
 	permissions: CalendarPermissions;
 	onEdit?: (reminder: Reminder) => void;
 	onDelete?: (reminder: Reminder) => void;
+	onSnooze?: (reminder: Reminder) => void;
+	onUnsnooze?: (reminder: Reminder) => void;
+	onIgnore?: (reminder: Reminder) => void;
+	onUnignore?: (reminder: Reminder) => void;
 }
 
 export function ReminderCard({
@@ -50,13 +57,21 @@ export function ReminderCard({
 	permissions,
 	onEdit,
 	onDelete,
+	onSnooze,
+	onUnsnooze,
+	onIgnore,
+	onUnignore,
 }: ReminderCardProps) {
 	const navigate = useNavigate();
 	const isOwner = reminder.owner_id === currentUserId;
 	const isGlobal = reminder.is_global === 1;
 	const pastDue = isPastDue(reminder.next_due);
 	const upcoming = isUpcoming(reminder.next_due, reminder.advance_notice_days);
+	const dueToday = isDueToday(reminder.next_due);
 	const recurrence = formatRecurrence(reminder.rrule);
+	const isSnoozed = reminder.snoozed === 1;
+	const isIgnored = reminder.ignored === 1;
+	const showActionButtons = upcoming && !pastDue;
 
 	// Determine if user can edit/delete this reminder
 	const canEdit = isGlobal || !isOwner
@@ -111,6 +126,18 @@ export function ReminderCard({
 										{recurrence}
 									</span>
 								)}
+								{isSnoozed && (
+									<span className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded flex items-center gap-1">
+										<BellOff className="h-3 w-3" />
+										Snoozed
+									</span>
+								)}
+								{isIgnored && (
+									<span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded flex items-center gap-1">
+										<X className="h-3 w-3" />
+										Ignored
+									</span>
+								)}
 								{reminder.doc_title && (
 									<button
 										onClick={handleDocClick}
@@ -121,6 +148,69 @@ export function ReminderCard({
 									</button>
 								)}
 							</div>
+							{showActionButtons && (
+								<div className="flex gap-2 pt-2">
+									{!isSnoozed && !isIgnored && (
+										<>
+											<Button
+												variant="outline"
+												size="sm"
+												onClick={(e) => {
+													e.stopPropagation();
+													onSnooze?.(reminder);
+												}}
+												disabled={dueToday}
+												title={dueToday ? "Cannot snooze reminder due today" : "Snooze until due date"}
+												className="gap-1"
+											>
+												<BellOff className="h-3 w-3" />
+												Snooze
+											</Button>
+											<Button
+												variant="outline"
+												size="sm"
+												onClick={(e) => {
+													e.stopPropagation();
+													onIgnore?.(reminder);
+												}}
+												title="Ignore this occurrence"
+												className="gap-1"
+											>
+												<X className="h-3 w-3" />
+												Ignore
+											</Button>
+										</>
+									)}
+									{isSnoozed && (
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={(e) => {
+												e.stopPropagation();
+												onUnsnooze?.(reminder);
+											}}
+											className="gap-1"
+										>
+											<Bell className="h-3 w-3" />
+											Unsnooze
+										</Button>
+									)}
+									{isIgnored && (
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={(e) => {
+												e.stopPropagation();
+												onUnignore?.(reminder);
+											}}
+											className="gap-1"
+										>
+											<Bell className="h-3 w-3" />
+											Unignore
+										</Button>
+									)}
+								</div>
+							)}
 						</CardHeader>
 					</Card>
 				</div>
