@@ -1,4 +1,4 @@
-import { LayoutGrid, List } from 'lucide-react';
+import { LayoutGrid, List, GripHorizontal } from 'lucide-react';
 import { Button } from './button';
 import { ViewMode } from '@/hooks/useViewPreference';
 
@@ -19,6 +19,16 @@ export function ViewToggle({ viewMode, onViewModeChange }: ViewToggleProps) {
 				aria-pressed={viewMode === 'grid'}
 			>
 				<LayoutGrid className="h-4 w-4" />
+			</Button>
+			<Button
+				variant={viewMode === 'bar' ? 'secondary' : 'ghost'}
+				size="sm"
+				className="h-8 w-8 p-0"
+				onClick={() => onViewModeChange('bar')}
+				aria-label="Bar view"
+				aria-pressed={viewMode === 'bar'}
+			>
+				<GripHorizontal className="h-4 w-4" />
 			</Button>
 			<Button
 				variant={viewMode === 'list' ? 'secondary' : 'ghost'}

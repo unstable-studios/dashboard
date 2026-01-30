@@ -30,7 +30,9 @@ const DEFAULT_PERMISSIONS: CalendarPermissions = {
 
 export function Dashboard() {
 	const { getAccessTokenSilently } = useAuth0();
-	const [viewMode, setViewMode] = useViewPreference();
+	const [linksViewMode, setLinksViewMode] = useViewPreference('dashboard-links');
+	const [docsViewMode, setDocsViewMode] = useViewPreference('dashboard-docs');
+	const [remindersViewMode, setRemindersViewMode] = useViewPreference('dashboard-reminders');
 	const [allLinks, setAllLinks] = useState<ServiceLink[]>([]);
 	const [allDocs, setAllDocs] = useState<Document[]>([]);
 	const [reminders, setReminders] = useState<Reminder[]>([]);
@@ -191,11 +193,8 @@ export function Dashboard() {
 	return (
 		<AppShell>
 			<div className='space-y-8'>
-				<div className='flex items-center justify-between'>
-					<div>
-						<h1 className='text-2xl font-bold'>Dashboard</h1>
-					</div>
-					<ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
+				<div>
+					<h1 className='text-2xl font-bold'>Dashboard</h1>
 				</div>
 
 				{error ? (
@@ -210,11 +209,14 @@ export function Dashboard() {
 										<Bell className='h-4 w-4' />
 										Upcoming Reminders
 									</h2>
-									<Link to='/calendar'>
-										<Button variant='ghost' size='sm'>
-											View All
-										</Button>
-									</Link>
+									<div className='flex items-center gap-2'>
+										<ViewToggle viewMode={remindersViewMode} onViewModeChange={setRemindersViewMode} />
+										<Link to='/calendar'>
+											<Button variant='ghost' size='sm'>
+												View All
+											</Button>
+										</Link>
+									</div>
 								</div>
 
 								<ReminderGrid
@@ -222,7 +224,7 @@ export function Dashboard() {
 									loading={false}
 									currentUserId={currentUserId}
 									permissions={calendarPermissions}
-									viewMode={viewMode}
+									viewMode={remindersViewMode}
 								/>
 							</section>
 						)}
@@ -234,18 +236,21 @@ export function Dashboard() {
 									<Pin className='h-4 w-4' />
 									{hasUserLinkPins ? 'Pinned Links' : 'Suggested Links'}
 								</h2>
-								{!hasUserLinkPins && !loading && pinnedLinks.length > 0 && (
-									<p className='text-muted-foreground text-sm'>
-										Right-click any link to pin your favorites
-									</p>
-								)}
-								{hasUserLinkPins && !loading && pinnedLinks.length > 0 && (
-									<Link to='/links'>
-										<Button variant='ghost' size='sm'>
-											View All
-										</Button>
-									</Link>
-								)}
+								<div className='flex items-center gap-2'>
+									{!hasUserLinkPins && !loading && pinnedLinks.length > 0 && (
+										<p className='text-muted-foreground text-sm hidden sm:block'>
+											Right-click any link to pin your favorites
+										</p>
+									)}
+									<ViewToggle viewMode={linksViewMode} onViewModeChange={setLinksViewMode} />
+									{hasUserLinkPins && !loading && pinnedLinks.length > 0 && (
+										<Link to='/links'>
+											<Button variant='ghost' size='sm'>
+												View All
+											</Button>
+										</Link>
+									)}
+								</div>
 							</div>
 
 							{!loading && pinnedLinks.length === 0 ? (
@@ -263,7 +268,7 @@ export function Dashboard() {
 									links={pinnedLinks}
 									loading={loading}
 									userFavorites={userFavoriteLinks}
-									viewMode={viewMode}
+									viewMode={linksViewMode}
 									onTogglePin={handleToggleLinkPin}
 									onReorder={hasUserLinkPins ? handleReorderLinks : undefined}
 								/>
@@ -278,20 +283,23 @@ export function Dashboard() {
 										<FileText className='h-4 w-4' />
 										Pinned Documents
 									</h2>
-									{!loading && pinnedDocs.length > 0 && (
-										<Link to='/docs'>
-											<Button variant='ghost' size='sm'>
-												View All
-											</Button>
-										</Link>
-									)}
+									<div className='flex items-center gap-2'>
+										<ViewToggle viewMode={docsViewMode} onViewModeChange={setDocsViewMode} />
+										{!loading && pinnedDocs.length > 0 && (
+											<Link to='/docs'>
+												<Button variant='ghost' size='sm'>
+													View All
+												</Button>
+											</Link>
+										)}
+									</div>
 								</div>
 
 								<DocList
 									documents={pinnedDocs}
 									loading={loading}
 									userFavorites={userFavoriteDocs}
-									viewMode={viewMode}
+									viewMode={docsViewMode}
 									onTogglePin={handleToggleDocPin}
 									onReorder={hasUserDocPins ? handleReorderDocs : undefined}
 								/>

@@ -62,7 +62,7 @@ interface SortableListProps<T extends { id: number }> {
 	onReorder: (orderedIds: number[]) => void;
 	renderItem: (item: T, dragHandleProps: DragHandleProps) => React.ReactNode;
 	disabled?: boolean;
-	layout?: 'list' | 'grid';
+	layout?: 'list' | 'grid' | 'bar';
 	className?: string;
 }
 
@@ -114,10 +114,12 @@ export function SortableList<T extends { id: number }>({
 
 	const defaultClassName = layout === 'grid'
 		? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'
+		: layout === 'bar'
+		? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2'
 		: 'space-y-2';
 
 	const containerClassName = className || defaultClassName;
-	const strategy = layout === 'grid' ? rectSortingStrategy : verticalListSortingStrategy;
+	const strategy = layout === 'list' ? verticalListSortingStrategy : rectSortingStrategy;
 
 	if (disabled) {
 		return (

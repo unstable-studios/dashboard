@@ -21,7 +21,7 @@ interface Category {
 export function DocsPage() {
 	const { getAccessTokenSilently } = useAuth0();
 	const navigate = useNavigate();
-	const [viewMode, setViewMode] = useViewPreference();
+	const [viewMode, setViewMode] = useViewPreference('docs');
 	const [documents, setDocuments] = useState<Document[]>([]);
 	const [categories, setCategories] = useState<Category[]>([]);
 	const [selectedCategory, setSelectedCategory] = useState<number | null>(null);

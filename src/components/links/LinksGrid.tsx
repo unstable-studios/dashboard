@@ -1,5 +1,6 @@
 import { LinkCard, ServiceLink } from './LinkCard';
 import { LinkListItem } from './LinkListItem';
+import { LinkBarItem } from './LinkBarItem';
 import { SortableList } from '@/components/ui/sortable-list';
 import { ViewMode } from '@/hooks/useViewPreference';
 
@@ -34,6 +35,18 @@ export function LinksGrid({
 						<div
 							key={i}
 							className="h-16 rounded-lg bg-muted animate-pulse"
+						/>
+					))}
+				</div>
+			);
+		}
+		if (viewMode === 'bar') {
+			return (
+				<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2">
+					{[...Array(12)].map((_, i) => (
+						<div
+							key={i}
+							className="h-14 rounded-md bg-muted animate-pulse"
 						/>
 					))}
 				</div>
@@ -84,6 +97,44 @@ export function LinksGrid({
 			<div className="space-y-2">
 				{links.map((link) => (
 					<LinkListItem
+						key={link.id}
+						link={link}
+						isAdmin={isAdmin}
+						isUserPinned={userFavorites.includes(link.id)}
+						onEdit={onEdit}
+						onDelete={onDelete}
+						onTogglePin={onTogglePin}
+					/>
+				))}
+			</div>
+		);
+	}
+
+	if (viewMode === 'bar') {
+		if (onReorder) {
+			return (
+				<SortableList
+					items={links}
+					onReorder={onReorder}
+					layout="bar"
+					renderItem={(link, dragHandleProps) => (
+						<LinkBarItem
+							link={link}
+							isAdmin={isAdmin}
+							isUserPinned={userFavorites.includes(link.id)}
+							onEdit={onEdit}
+							onDelete={onDelete}
+							onTogglePin={onTogglePin}
+							dragHandleProps={dragHandleProps}
+						/>
+					)}
+				/>
+			);
+		}
+		return (
+			<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2">
+				{links.map((link) => (
+					<LinkBarItem
 						key={link.id}
 						link={link}
 						isAdmin={isAdmin}

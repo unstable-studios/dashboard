@@ -1,5 +1,6 @@
 import { DocCard, Document } from './DocCard';
 import { DocListItem } from './DocListItem';
+import { DocBarItem } from './DocBarItem';
 import { SortableList } from '@/components/ui/sortable-list';
 import { ViewMode } from '@/hooks/useViewPreference';
 
@@ -24,6 +25,18 @@ export function DocList({ documents, loading, isAdmin, userFavorites, viewMode =
 						<div
 							key={i}
 							className="h-16 rounded-lg bg-muted animate-pulse"
+						/>
+					))}
+				</div>
+			);
+		}
+		if (viewMode === 'bar') {
+			return (
+				<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2">
+					{[...Array(12)].map((_, i) => (
+						<div
+							key={i}
+							className="h-14 rounded-md bg-muted animate-pulse"
 						/>
 					))}
 				</div>
@@ -74,6 +87,44 @@ export function DocList({ documents, loading, isAdmin, userFavorites, viewMode =
 			<div className="space-y-2">
 				{documents.map((doc) => (
 					<DocListItem
+						key={doc.id}
+						doc={doc}
+						isAdmin={isAdmin}
+						isUserPinned={userFavorites?.includes(doc.id)}
+						onEdit={onEdit}
+						onDelete={onDelete}
+						onTogglePin={onTogglePin}
+					/>
+				))}
+			</div>
+		);
+	}
+
+	if (viewMode === 'bar') {
+		if (onReorder) {
+			return (
+				<SortableList
+					items={documents}
+					onReorder={onReorder}
+					layout="bar"
+					renderItem={(doc, dragHandleProps) => (
+						<DocBarItem
+							doc={doc}
+							isAdmin={isAdmin}
+							isUserPinned={userFavorites?.includes(doc.id)}
+							onEdit={onEdit}
+							onDelete={onDelete}
+							onTogglePin={onTogglePin}
+							dragHandleProps={dragHandleProps}
+						/>
+					)}
+				/>
+			);
+		}
+		return (
+			<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2">
+				{documents.map((doc) => (
+					<DocBarItem
 						key={doc.id}
 						doc={doc}
 						isAdmin={isAdmin}
