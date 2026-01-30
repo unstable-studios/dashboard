@@ -1,6 +1,8 @@
--- Seed documents for testing (idempotent: ignore if slug already exists)
-INSERT OR IGNORE INTO documents (title, slug, content, excerpt, category_id, is_published, created_by, updated_by) VALUES
-  ('New Employee Onboarding', 'onboarding', '# New Employee Onboarding
+-- Seed documents migration - only runs if documents table is empty
+-- This ensures seed data is only added for fresh databases
+
+INSERT INTO documents (title, slug, content, excerpt, category_id, is_published, created_by, updated_by)
+SELECT 'New Employee Onboarding', 'onboarding', '# New Employee Onboarding
 
 Welcome to Unstable Studios! This guide will help you get set up.
 
@@ -21,9 +23,12 @@ Welcome to Unstable Studios! This guide will help you get set up.
 ## Questions?
 
 Reach out to your manager or in #general on Slack.
-', 'Guide for new team members getting started', 2, 1, 'system', 'system'),
+', 'Guide for new team members getting started',
+   (SELECT id FROM categories WHERE slug = 'hr'), 1, 'system', 'system'
+WHERE NOT EXISTS (SELECT 1 FROM documents LIMIT 1);
 
-  ('Invoice Process', 'invoices', '# Invoice Process
+INSERT INTO documents (title, slug, content, excerpt, category_id, is_published, created_by, updated_by)
+SELECT 'Invoice Process', 'invoices', '# Invoice Process
 
 How to create and send invoices through QuickBooks.
 
@@ -46,9 +51,12 @@ If payment is overdue, send a friendly reminder at:
 - 7 days past due
 - 14 days past due
 - 30 days past due (escalate to management)
-', 'Step-by-step guide for creating invoices', 1, 1, 'system', 'system'),
+', 'Step-by-step guide for creating invoices',
+   (SELECT id FROM categories WHERE slug = 'finance'), 1, 'system', 'system'
+WHERE NOT EXISTS (SELECT 1 FROM documents WHERE slug = 'invoices');
 
-  ('Tax Deadlines', 'tax-deadlines', '# Tax Deadlines 2025
+INSERT INTO documents (title, slug, content, excerpt, category_id, is_published, created_by, updated_by)
+SELECT 'Tax Deadlines', 'tax-deadlines', '# Tax Deadlines 2025
 
 Important tax dates to remember.
 
@@ -64,4 +72,6 @@ Important tax dates to remember.
 - Quarterly payroll tax filings
 - Annual W-2 distribution (Jan 31)
 - 1099 distribution (Jan 31)
-', 'Key tax dates and filing deadlines', 1, 1, 'system', 'system');
+', 'Key tax dates and filing deadlines',
+   (SELECT id FROM categories WHERE slug = 'finance'), 1, 'system', 'system'
+WHERE NOT EXISTS (SELECT 1 FROM documents WHERE slug = 'tax-deadlines');
