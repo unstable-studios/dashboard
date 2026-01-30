@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.12.0](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.11.1...echo-hub-v1.12.0) (2026-01-30)
+
+
+### Features
+
+* **echo-hub:** add bar view mode with per-section view preferences ([#81](https://github.com/unstable-studios/echo-core/issues/81)) ([38219be](https://github.com/unstable-studios/echo-core/commit/38219beb96dfbe952680a1b12c798214c186b987))
+
+
+### Bug Fixes
+
+* **echo-hub:** make seed migrations skip if data exists ([#79](https://github.com/unstable-studios/echo-core/issues/79)) ([f5e46e0](https://github.com/unstable-studios/echo-core/commit/f5e46e097cb29bb6354975a59d908ddc1c91b0f4))
+
 ## [1.11.1](https://github.com/unstable-studios/echo-core/compare/echo-hub-v1.11.0...echo-hub-v1.11.1) (2026-01-30)
 
 
