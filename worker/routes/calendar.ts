@@ -44,7 +44,7 @@ calendar.get(
 		}
 
 		// Build the full subscription URL
-		const host = c.req.header('host') || 'hub.unstablestudios.com';
+		const host = c.req.header('host') || 'dashboard.unstablestudios.com';
 		const protocol = host.includes('localhost') ? 'http' : 'https';
 		const subscriptionUrl = `${protocol}://${host}/calendar.ics?token=${tokenRow.token}`;
 
@@ -73,7 +73,7 @@ calendar.post(
 			.bind(user.sub, token, token)
 			.run();
 
-		const host = c.req.header('host') || 'hub.unstablestudios.com';
+		const host = c.req.header('host') || 'dashboard.unstablestudios.com';
 		const protocol = host.includes('localhost') ? 'http' : 'https';
 		const subscriptionUrl = `${protocol}://${host}/calendar.ics?token=${token}`;
 
@@ -170,7 +170,7 @@ calendar.get('/feed', async (c) => {
 			updated_at: string;
 		}>();
 
-	const host = c.req.header('host') || 'hub.unstablestudios.com';
+	const host = c.req.header('host') || 'dashboard.unstablestudios.com';
 	const protocol = host.includes('localhost') ? 'http' : 'https';
 	const baseUrl = `${protocol}://${host}`;
 
@@ -178,10 +178,10 @@ calendar.get('/feed', async (c) => {
 	const lines: string[] = [
 		'BEGIN:VCALENDAR',
 		'VERSION:2.0',
-		'PRODID:-//Echo Hub//Calendar//EN',
+		'PRODID:-//Dashboard//Calendar//EN',
 		'CALSCALE:GREGORIAN',
 		'METHOD:PUBLISH',
-		'X-WR-CALNAME:Echo Hub Reminders',
+		'X-WR-CALNAME:Dashboard Reminders',
 		'REFRESH-INTERVAL;VALUE=DURATION:PT1H',
 		'X-PUBLISHED-TTL:PT1H',
 	];
@@ -190,7 +190,7 @@ calendar.get('/feed', async (c) => {
 	const nowStamp = formatICalDateTime(new Date().toISOString());
 
 	for (const reminder of reminders) {
-		const uid = `reminder-${reminder.id}@hub.unstablestudios.com`;
+		const uid = `reminder-${reminder.id}@dashboard.unstablestudios.com`;
 		const dtstart = formatICalDate(reminder.next_due);
 
 		// Calculate DTEND (next day for all-day events)

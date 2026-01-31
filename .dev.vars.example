@@ -4,4 +4,4 @@
 AUTH0_DOMAIN=https://your-tenant.auth0.com/
 AUTH0_CLIENT_ID=your-client-id
 AUTH0_CLIENT_SECRET=your-client-secret
-AUTH0_AUDIENCE=https://hub.unstablestudios.com/api
+AUTH0_AUDIENCE=https://dashboard.unstablestudios.com/api

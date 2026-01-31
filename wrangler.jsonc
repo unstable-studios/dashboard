@@ -4,13 +4,13 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "echo-hub",
+	"name": "dashboard",
 	"main": "./worker/index.ts",
 	"preview_urls": false,
 	"workers_dev": false,
 	"routes": [
 		{
-			"pattern": "hub.unstablestudios.com/*",
+			"pattern": "dashboard.unstablestudios.com/*",
 			"zone_name": "unstablestudios.com"
 		}
 	],
@@ -28,7 +28,7 @@
 	"d1_databases": [
 		{
 			"binding": "DB",
-			"database_name": "echo-hub",
+			"database_name": "dashboard",
 			"database_id": "6042bff6-a3e6-4b12-8bf7-3b62acabcbd6",
 		},
 	],
@@ -41,7 +41,7 @@
 	"r2_buckets": [
 		{
 			"binding": "ATTACHMENTS",
-			"bucket_name": "echo-hub-attachments",
+			"bucket_name": "dashboard-attachments",
 		},
 	],
 	"triggers": {

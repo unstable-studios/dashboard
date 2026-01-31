@@ -1,5 +1,5 @@
 {
-	"name": "echo-hub",
+	"name": "dashboard",
 	"private": true,
 	"version": "1.12.0",
 	"type": "module",
@@ -86,8 +86,8 @@
 		"commitlint": "commitlint --edit",
 		"commit": "cz",
 		"prepare": "husky",
-		"db:migrate": "doppler run -- wrangler d1 execute echo-hub --remote",
-		"db:migrate:local": "wrangler d1 execute echo-hub --local"
+		"db:migrate": "doppler run -- wrangler d1 execute dashboard --remote",
+		"db:migrate:local": "wrangler d1 execute dashboard --local"
 	},
 	"packageManager": "pnpm@10.26.2+sha512.0e308ff2005fc7410366f154f625f6631ab2b16b1d2e70238444dd6ae9d630a8482d92a451144debc492416896ed16f7b114a86ec68b8404b2443869e68ffda6"
 }

@@ -25,11 +25,11 @@ const STARTER_LINKS = [
 
 // Welcome document content
 const WELCOME_DOC = {
-	title: 'Welcome to Echo Hub',
-	slug: 'welcome-to-echo-hub',
-	content: `# Welcome to Echo Hub
+	title: 'Welcome to Dashboard',
+	slug: 'welcome-to-dashboard',
+	content: `# Welcome to Dashboard
 
-Echo Hub is your personal dashboard for organizing links, documents, and reminders in one place.
+Dashboard is your personal dashboard for organizing links, documents, and reminders in one place.
 
 ## Getting Started
 
@@ -48,13 +48,13 @@ Your dashboard shows pinned links, documents, and upcoming reminders. Pin the it
 
 Explore the Settings page to customize your experience, including theme preferences and email notifications for reminders.
 
-Enjoy using Echo Hub!`,
-	excerpt: 'Get started with Echo Hub - your personal dashboard for links, documents, and reminders.',
+Enjoy using Dashboard!`,
+	excerpt: 'Get started with Dashboard - your personal dashboard for links, documents, and reminders.',
 };
 
 // Sample reminder
 const SAMPLE_REMINDER = {
-	title: 'Explore Echo Hub Features',
+	title: 'Explore Dashboard Features',
 	description: 'Take some time to explore the different features: add links, create documents, and set up reminders.',
 	advance_notice_days: 7,
 };

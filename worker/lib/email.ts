@@ -122,7 +122,7 @@ export function generateReminderEmailHtml(
       </div>
 
       <p style="color: #9ca3af; font-size: 12px; margin-top: 24px;">
-        <a href="${actionUrls.dashboard}" style="color: #6b7280;">View all reminders in Echo Hub</a>
+        <a href="${actionUrls.dashboard}" style="color: #6b7280;">View all reminders in Dashboard</a>
       </p>
     </div>
   </div>

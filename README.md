@@ -1,54 +1,60 @@
-# The Hub (echo-hub)
+# Dashboard
 
-Internal dashboard and documentation hub for Unstable Studios.
+A personal dashboard for organizing links, documents, and reminders in one place.
+
+## Features
+
+- **Links Management** - Organize bookmarks with categories and pinning
+- **Documents** - Markdown-based knowledge base with version history
+- **Reminders** - Calendar with recurring reminders and email notifications
+- **iCal Feed** - Subscribe to reminders in your favorite calendar app
 
 ## Tech Stack
 
-- **Frontend**: React 19 + Vite 7 + Tailwind CSS 4
+- **Frontend**: React 19 + Vite + Tailwind CSS 4
 - **Backend**: Hono on Cloudflare Workers
 - **Auth**: Auth0 (OIDC)
 - **Storage**: Cloudflare D1 (SQLite), KV (cache), R2 (attachments)
-- **Package Manager**: pnpm
+- **Email**: Postmark (for reminder notifications)
 
-## Local Development
+## Getting Started
 
 ### Prerequisites
 
-- Node.js 24+
+- Node.js 22+
 - pnpm
-- Doppler CLI (for secrets)
-- Access to the `echo-core` Doppler project
+- Cloudflare account
+- Auth0 account
 
-### Setup
+### Local Development
 
 ```bash
-cd apps/echo-hub
+# Install dependencies
 pnpm install
-```
 
-### Running Locally
+# Copy environment files
+cp .env.example .env
+cp .dev.vars.example .dev.vars
 
-```bash
-# With Doppler (recommended - auto-generates .env and .dev.vars)
+# Edit .env and .dev.vars with your Auth0 credentials
+
+# Run locally
 pnpm dev
-
-# Without Doppler (requires manual .env and .dev.vars files)
-pnpm dev:local
 ```
 
 The app runs at `http://localhost:5173`.
 
 ### Environment Variables
 
-#### Frontend (Vite) - `.env`
+#### Frontend (.env)
 
 | Variable | Description |
 |----------|-------------|
-| `VITE_AUTH0_DOMAIN` | Auth0 tenant URL (e.g., `https://tenant.auth0.com/`) |
+| `VITE_AUTH0_DOMAIN` | Auth0 tenant URL |
 | `VITE_AUTH0_CLIENT_ID` | Auth0 application client ID |
 | `VITE_AUTH0_AUDIENCE` | Auth0 API audience |
 
-#### Worker (Wrangler) - `.dev.vars`
+#### Worker (.dev.vars)
 
 | Variable | Description |
 |----------|-------------|
@@ -56,47 +62,37 @@ The app runs at `http://localhost:5173`.
 | `AUTH0_CLIENT_ID` | Auth0 application client ID |
 | `AUTH0_CLIENT_SECRET` | Auth0 application client secret |
 | `AUTH0_AUDIENCE` | Auth0 API audience |
-
-See `.env.example` and `.dev.vars.example` for templates.
-
-## Build & Deploy
-
-### Build
-
-```bash
-pnpm build           # Standard build
-pnpm build:prod      # Production build (uses Doppler for env vars)
-```
-
-### Deploy
-
-```bash
-pnpm deploy          # Build and deploy to Cloudflare Workers
-```
-
-Deploys to: `https://hub.unstablestudios.com`
+| `POSTMARK_API_KEY` | Postmark API key (for email reminders) |
 
 ### Database Migrations
 
 ```bash
-pnpm db:migrate        # Run migrations on remote D1
-pnpm db:migrate:local  # Run migrations on local D1
+# Run migrations locally
+pnpm db:migrate:local --file=migrations/0001_initial_schema.sql
+
+# Run all migrations
+for f in migrations/*.sql; do pnpm db:migrate:local --file=$f; done
 ```
 
-## Cloudflare Resources
+## Deployment
 
-| Resource | Name | Binding |
-|----------|------|---------|
-| D1 Database | `echo-hub` | `DB` |
-| KV Namespace | (see wrangler.jsonc) | `CACHE` |
-| R2 Bucket | `echo-hub-attachments` | `ATTACHMENTS` |
+### Cloudflare Resources
 
-**Note**: Resource IDs in `wrangler.jsonc` need to be updated after creating the Cloudflare resources.
+You'll need to create:
 
-## Migration Notes
+1. **D1 Database** - `dashboard`
+2. **KV Namespace** - for caching
+3. **R2 Bucket** - `dashboard-attachments` (for file uploads)
 
-This app was imported from `~/src/intranet` on 2026-01-27.
+Update the IDs in `wrangler.jsonc` after creating these resources.
 
-- Source commit: `85a7d950fb669d9a15100e137a5932ff71549f8a`
-- Import method: git subtree
-- Original name: "Unstable Studios Intranet" → renamed to "The Hub"
+### Deploy
+
+```bash
+pnpm build
+pnpm deploy
+```
+
+## License
+
+AGPL-3.0 - See [LICENSE](LICENSE) for details.
