@@ -21,7 +21,6 @@ export function DocViewer() {
 	const [attachments, setAttachments] = useState<Attachment[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
-	const [isAdmin, setIsAdmin] = useState(false);
 	const [deleting, setDeleting] = useState(false);
 
 	useEffect(() => {
@@ -29,10 +28,7 @@ export function DocViewer() {
 			if (!slug) return;
 
 			try {
-				const [docRes, meRes] = await Promise.all([
-					authFetch(`/api/docs/${slug}`, getAccessTokenSilently),
-					authFetch('/api/auth/me', getAccessTokenSilently),
-				]);
+				const docRes = await authFetch(`/api/docs/${slug}`, getAccessTokenSilently);
 
 				if (!docRes.ok) {
 					if (docRes.status === 404) {
@@ -44,10 +40,7 @@ export function DocViewer() {
 				}
 
 				const docData = await docRes.json();
-				const meData = meRes.ok ? await meRes.json() : { isAdmin: false };
-
 				setDocument(docData.document);
-				setIsAdmin(meData.isAdmin || false);
 
 				// Fetch attachments if document has an ID
 				if (docData.document?.id) {
@@ -256,26 +249,24 @@ export function DocViewer() {
 							)}
 						</div>
 
-						{isAdmin && (
-							<div className="flex gap-2">
-								<Link to={`/docs/${document.slug}/edit`}>
-									<Button variant="outline" size="sm" className="gap-2">
-										<Edit className="h-4 w-4" />
-										Edit
-									</Button>
-								</Link>
-								<Button
-									variant="outline"
-									size="sm"
-									className="gap-2 text-destructive hover:text-destructive"
-									onClick={handleDelete}
-									disabled={deleting}
-								>
-									<Trash2 className="h-4 w-4" />
-									{deleting ? 'Deleting...' : 'Delete'}
+						<div className="flex gap-2">
+							<Link to={`/docs/${document.slug}/edit`}>
+								<Button variant="outline" size="sm" className="gap-2">
+									<Edit className="h-4 w-4" />
+									Edit
 								</Button>
-							</div>
-						)}
+							</Link>
+							<Button
+								variant="outline"
+								size="sm"
+								className="gap-2 text-destructive hover:text-destructive"
+								onClick={handleDelete}
+								disabled={deleting}
+							>
+								<Trash2 className="h-4 w-4" />
+								{deleting ? 'Deleting...' : 'Delete'}
+							</Button>
+						</div>
 					</div>
 				</div>
 
@@ -287,25 +278,20 @@ export function DocViewer() {
 				</div>
 
 				{/* Attachments */}
-				{(attachments.length > 0 || isAdmin) && (
-					<div className="mt-8 pt-6 border-t space-y-4">
-						<div className="flex items-center gap-2 text-sm font-medium">
-							<Paperclip className="h-4 w-4" />
-							Attachments
-						</div>
-
-						<AttachmentList
-							attachments={attachments}
-							isAdmin={isAdmin}
-							onDownload={handleDownloadAttachment}
-							onDelete={isAdmin ? handleDeleteAttachment : undefined}
-						/>
-
-						{isAdmin && (
-							<AttachmentUpload onUpload={handleUploadAttachment} />
-						)}
+				<div className="mt-8 pt-6 border-t space-y-4">
+					<div className="flex items-center gap-2 text-sm font-medium">
+						<Paperclip className="h-4 w-4" />
+						Attachments
 					</div>
-				)}
+
+					<AttachmentList
+						attachments={attachments}
+						onDownload={handleDownloadAttachment}
+						onDelete={handleDeleteAttachment}
+					/>
+
+					<AttachmentUpload onUpload={handleUploadAttachment} />
+				</div>
 
 				{/* Footer */}
 				<div className="mt-12 pt-4 border-t text-sm text-muted-foreground">

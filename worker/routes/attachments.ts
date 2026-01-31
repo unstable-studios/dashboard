@@ -39,9 +39,21 @@ const ALLOWED_TYPES = [
 
 const attachments = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-// List attachments for a document
+// List attachments for a document (only if the document is owned by the authenticated user)
 attachments.get('/document/:documentId', authMiddleware(), attachmentsReadMiddleware(), async (c) => {
+	const user = c.get('user');
 	const documentId = c.req.param('documentId');
+
+	// Verify the document is owned by the user
+	const doc = await c.env.DB.prepare(
+		'SELECT id FROM documents WHERE id = ? AND owner_id = ?'
+	)
+		.bind(documentId, user.sub)
+		.first();
+
+	if (!doc) {
+		return c.json({ error: 'Document not found' }, 404);
+	}
 
 	const { results } = await c.env.DB.prepare(
 		`SELECT id, document_id, filename, original_name, content_type, size_bytes, uploaded_by, created_at
@@ -53,14 +65,17 @@ attachments.get('/document/:documentId', authMiddleware(), attachmentsReadMiddle
 	return c.json({ attachments: results });
 });
 
-// Get download URL for an attachment
+// Get download URL for an attachment (only if the parent document is owned by the authenticated user)
 attachments.get('/:id/download', authMiddleware(), attachmentsReadMiddleware(), async (c) => {
+	const user = c.get('user');
 	const id = c.req.param('id');
 
 	const attachment = await c.env.DB.prepare(
-		'SELECT * FROM attachments WHERE id = ?'
+		`SELECT a.* FROM attachments a
+		 JOIN documents d ON a.document_id = d.id
+		 WHERE a.id = ? AND d.owner_id = ?`
 	)
-		.bind(id)
+		.bind(id, user.sub)
 		.first<Attachment>();
 
 	if (!attachment) {
@@ -91,6 +106,7 @@ attachments.get('/:id/download', authMiddleware(), attachmentsReadMiddleware(), 
 });
 
 // Upload attachment (requires attachments:upload)
+// Only allows upload to documents owned by the authenticated user
 attachments.post(
 	'/document/:documentId',
 	authMiddleware(),
@@ -103,9 +119,11 @@ attachments.post(
 			return c.json({ error: 'Invalid document ID' }, 400);
 		}
 
-		// Verify document exists
-		const doc = await c.env.DB.prepare('SELECT id FROM documents WHERE id = ?')
-			.bind(documentId)
+		// Verify document exists and is owned by the user
+		const doc = await c.env.DB.prepare(
+			'SELECT id FROM documents WHERE id = ? AND owner_id = ?'
+		)
+			.bind(documentId, user.sub)
 			.first();
 
 		if (!doc) {
@@ -189,13 +207,17 @@ attachments.post(
 );
 
 // Delete attachment (requires attachments:delete)
+// Only allows deletion if the parent document is owned by the authenticated user
 attachments.delete('/:id', authMiddleware(), attachmentsDeleteMiddleware(), async (c) => {
+	const user = c.get('user');
 	const id = c.req.param('id');
 
 	const attachment = await c.env.DB.prepare(
-		'SELECT * FROM attachments WHERE id = ?'
+		`SELECT a.* FROM attachments a
+		 JOIN documents d ON a.document_id = d.id
+		 WHERE a.id = ? AND d.owner_id = ?`
 	)
-		.bind(id)
+		.bind(id, user.sub)
 		.first<Attachment>();
 
 	if (!attachment) {

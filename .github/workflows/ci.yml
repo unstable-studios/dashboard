@@ -1,0 +1,128 @@
+name: Dashboard CI/CD
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  deployments: write
+
+concurrency:
+  group: dashboard-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: 24
+
+jobs:
+  lint-and-typecheck:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Type check
+        run: pnpm typecheck
+
+      - name: Build
+        run: pnpm build
+        env:
+          # Dummy values for CI validation - real values only needed for deploy
+          VITE_AUTH0_DOMAIN: ci-check.auth0.com
+          VITE_AUTH0_CLIENT_ID: ci-check-client-id
+          VITE_AUTH0_AUDIENCE: https://ci-check-api
+
+  deploy:
+    name: Deploy to Cloudflare
+    runs-on: ubuntu-latest
+    needs: lint-and-typecheck
+    if: startsWith(github.ref, 'refs/tags/v')
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run D1 migrations
+        run: |
+          echo "Running D1 migrations..."
+          for file in migrations/*.sql; do
+            echo "Applying $file..."
+            # Run migration and capture output
+            if output=$(npx wrangler d1 execute dashboard --remote --file="$file" 2>&1); then
+              echo "✓ $file applied successfully"
+            else
+              # Check if error is an expected idempotency error
+              if echo "$output" | grep -Eq "duplicate column name|already exists"; then
+                echo "○ $file skipped (already applied)"
+              else
+                # Unexpected error - fail the deployment
+                echo "✗ $file failed with unexpected error:"
+                echo "$output"
+                exit 1
+              fi
+            fi
+          done
+          echo "Migrations complete."
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Build frontend
+        run: pnpm build
+        env:
+          # Vite requires VITE_ prefix - transform from base names
+          VITE_AUTH0_DOMAIN: ${{ vars.AUTH0_DOMAIN }}
+          VITE_AUTH0_CLIENT_ID: ${{ vars.AUTH0_CLIENT_ID }}
+          VITE_AUTH0_AUDIENCE: ${{ vars.AUTH0_AUDIENCE }}
+          VITE_AUTH0_ORGANIZATION: ${{ vars.AUTH0_ORGANIZATION }}
+
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          vars: |
+            AUTH0_DOMAIN
+            AUTH0_CLIENT_ID
+            AUTH0_AUDIENCE
+          secrets: |
+            AUTH0_CLIENT_SECRET
+        env:
+          # Worker uses base names directly
+          AUTH0_DOMAIN: ${{ vars.AUTH0_DOMAIN }}
+          AUTH0_CLIENT_ID: ${{ vars.AUTH0_CLIENT_ID }}
+          AUTH0_AUDIENCE: ${{ vars.AUTH0_AUDIENCE }}
+          AUTH0_CLIENT_SECRET: ${{ secrets.AUTH0_CLIENT_SECRET }}

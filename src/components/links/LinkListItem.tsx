@@ -11,7 +11,6 @@ import { ServiceLink } from './LinkCard';
 
 interface LinkListItemProps {
 	link: ServiceLink;
-	isAdmin?: boolean;
 	isUserPinned?: boolean;
 	onEdit?: (link: ServiceLink) => void;
 	onDelete?: (link: ServiceLink) => void;
@@ -21,7 +20,6 @@ interface LinkListItemProps {
 
 export function LinkListItem({
 	link,
-	isAdmin,
 	isUserPinned,
 	onEdit,
 	onDelete,
@@ -92,7 +90,7 @@ export function LinkListItem({
 						)}
 					</ContextMenuItem>
 				)}
-				{isAdmin && (
+				{(onEdit || onDelete) && (
 					<>
 						<ContextMenuSeparator />
 						{onEdit && (

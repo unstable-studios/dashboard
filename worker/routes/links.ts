@@ -13,7 +13,9 @@ interface Variables {
 const links = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // List all links (optionally filtered by category)
+// Only returns links owned by the authenticated user
 links.get('/', authMiddleware(), linksReadMiddleware(), async (c) => {
+	const user = c.get('user');
 	const categoryId = c.req.query('category_id');
 	const pinnedOnly = c.req.query('pinned') === 'true';
 
@@ -21,9 +23,9 @@ links.get('/', authMiddleware(), linksReadMiddleware(), async (c) => {
 		SELECT l.*, c.name as category_name, c.slug as category_slug
 		FROM service_links l
 		LEFT JOIN categories c ON l.category_id = c.id
-		WHERE 1=1
+		WHERE l.owner_id = ?
 	`;
-	const params: (string | number)[] = [];
+	const params: (string | number)[] = [user.sub];
 
 	if (categoryId) {
 		query += ' AND l.category_id = ?';
@@ -37,23 +39,22 @@ links.get('/', authMiddleware(), linksReadMiddleware(), async (c) => {
 	query += ' ORDER BY l.is_pinned DESC, l.sort_order ASC, l.title ASC';
 
 	const stmt = c.env.DB.prepare(query);
-	const { results } = params.length > 0
-		? await stmt.bind(...params).all()
-		: await stmt.all();
+	const { results } = await stmt.bind(...params).all();
 
 	return c.json({ links: results });
 });
 
-// Get single link
+// Get single link (only if owned by the authenticated user)
 links.get('/:id', authMiddleware(), linksReadMiddleware(), async (c) => {
+	const user = c.get('user');
 	const id = c.req.param('id');
 	const link = await c.env.DB.prepare(
 		`SELECT l.*, c.name as category_name, c.slug as category_slug
 		 FROM service_links l
 		 LEFT JOIN categories c ON l.category_id = c.id
-		 WHERE l.id = ?`
+		 WHERE l.id = ? AND l.owner_id = ?`
 	)
-		.bind(id)
+		.bind(id, user.sub)
 		.first();
 
 	if (!link) {
@@ -64,7 +65,9 @@ links.get('/:id', authMiddleware(), linksReadMiddleware(), async (c) => {
 });
 
 // Create link (requires links:edit)
+// Sets owner_id to the authenticated user
 links.post('/', authMiddleware(), linksEditMiddleware(), async (c) => {
+	const user = c.get('user');
 	const body = await c.req.json<{
 		title: string;
 		url: string;
@@ -81,8 +84,8 @@ links.post('/', authMiddleware(), linksEditMiddleware(), async (c) => {
 	}
 
 	const result = await c.env.DB.prepare(
-		`INSERT INTO service_links (title, description, url, icon, icon_type, category_id, is_pinned, sort_order)
-		 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+		`INSERT INTO service_links (title, description, url, icon, icon_type, category_id, is_pinned, sort_order, owner_id)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
 	)
 		.bind(
 			body.title,
@@ -92,7 +95,8 @@ links.post('/', authMiddleware(), linksEditMiddleware(), async (c) => {
 			body.icon_type || 'emoji',
 			body.category_id || null,
 			body.is_pinned ? 1 : 0,
-			body.sort_order || 0
+			body.sort_order || 0,
+			user.sub
 		)
 		.run();
 
@@ -100,7 +104,9 @@ links.post('/', authMiddleware(), linksEditMiddleware(), async (c) => {
 });
 
 // Update link (requires links:edit)
+// Only updates links owned by the authenticated user
 links.put('/:id', authMiddleware(), linksEditMiddleware(), async (c) => {
+	const user = c.get('user');
 	const id = c.req.param('id');
 	const body = await c.req.json<{
 		title?: string;
@@ -114,9 +120,9 @@ links.put('/:id', authMiddleware(), linksEditMiddleware(), async (c) => {
 	}>();
 
 	const existing = await c.env.DB.prepare(
-		'SELECT * FROM service_links WHERE id = ?'
+		'SELECT * FROM service_links WHERE id = ? AND owner_id = ?'
 	)
-		.bind(id)
+		.bind(id, user.sub)
 		.first();
 
 	if (!existing) {
@@ -127,7 +133,7 @@ links.put('/:id', authMiddleware(), linksEditMiddleware(), async (c) => {
 		`UPDATE service_links SET
 			title = ?, description = ?, url = ?, icon = ?, icon_type = ?,
 			category_id = ?, is_pinned = ?, sort_order = ?, updated_at = CURRENT_TIMESTAMP
-		 WHERE id = ?`
+		 WHERE id = ? AND owner_id = ?`
 	)
 		.bind(
 			body.title ?? existing.title,
@@ -138,7 +144,8 @@ links.put('/:id', authMiddleware(), linksEditMiddleware(), async (c) => {
 			body.category_id !== undefined ? body.category_id : existing.category_id,
 			body.is_pinned !== undefined ? (body.is_pinned ? 1 : 0) : existing.is_pinned,
 			body.sort_order ?? existing.sort_order,
-			id
+			id,
+			user.sub
 		)
 		.run();
 
@@ -146,11 +153,23 @@ links.put('/:id', authMiddleware(), linksEditMiddleware(), async (c) => {
 });
 
 // Delete link (requires links:delete)
+// Only deletes links owned by the authenticated user
 links.delete('/:id', authMiddleware(), linksDeleteMiddleware(), async (c) => {
+	const user = c.get('user');
 	const id = c.req.param('id');
 
-	await c.env.DB.prepare('DELETE FROM service_links WHERE id = ?')
-		.bind(id)
+	const existing = await c.env.DB.prepare(
+		'SELECT id FROM service_links WHERE id = ? AND owner_id = ?'
+	)
+		.bind(id, user.sub)
+		.first();
+
+	if (!existing) {
+		return c.json({ error: 'Link not found' }, 404);
+	}
+
+	await c.env.DB.prepare('DELETE FROM service_links WHERE id = ? AND owner_id = ?')
+		.bind(id, user.sub)
 		.run();
 
 	return c.json({ success: true });

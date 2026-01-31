@@ -253,7 +253,7 @@ export function Dashboard() {
 								<CardContent className='flex items-start gap-4 py-4'>
 									<Sparkles className='text-primary h-6 w-6 flex-shrink-0 mt-0.5' />
 									<div className='flex-1 min-w-0'>
-										<h3 className='font-semibold'>Welcome to Dashboard!</h3>
+										<h3 className='font-semibold'>Welcome to Echo Hub!</h3>
 										<p className='text-muted-foreground text-sm mt-1'>
 											We&apos;ve set up some starter content for you. Check out your new links,
 											read the welcome document, and explore the calendar for your first reminder.

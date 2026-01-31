@@ -27,7 +27,6 @@ export function LinksPage() {
 	const [selectedCategorySlug, setSelectedCategorySlug] = useDynamicFilterPreference('links-category');
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
-	const [isAdmin, setIsAdmin] = useState(false);
 	const [userFavorites, setUserFavorites] = useState<number[]>([]);
 
 	// Dialog state
@@ -36,10 +35,9 @@ export function LinksPage() {
 
 	const fetchData = async () => {
 		try {
-			const [linksRes, categoriesRes, meRes, prefsRes] = await Promise.all([
+			const [linksRes, categoriesRes, prefsRes] = await Promise.all([
 				authFetch('/api/links', getAccessTokenSilently),
 				authFetch('/api/categories', getAccessTokenSilently),
-				authFetch('/api/auth/me', getAccessTokenSilently),
 				authFetch('/api/preferences', getAccessTokenSilently),
 			]);
 
@@ -47,16 +45,14 @@ export function LinksPage() {
 				throw new Error('Failed to fetch data');
 			}
 
-			const [linksData, categoriesData, meData, prefsData] = await Promise.all([
+			const [linksData, categoriesData, prefsData] = await Promise.all([
 				linksRes.json(),
 				categoriesRes.json(),
-				meRes.ok ? meRes.json() : { isAdmin: false },
 				prefsRes.ok ? prefsRes.json() : { preferences: { favorite_links: [] } },
 			]);
 
 			setLinks(linksData.links);
 			setCategories(categoriesData.categories);
-			setIsAdmin(meData.isAdmin || false);
 			setUserFavorites(prefsData.preferences?.favorite_links || []);
 		} catch (err) {
 			console.error('Error fetching data:', err);
@@ -144,12 +140,10 @@ export function LinksPage() {
 					</div>
 					<div className="flex items-center gap-3">
 						<ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
-						{isAdmin && (
-							<Button onClick={handleAddNew} className="gap-2">
-								<Plus className="h-4 w-4" />
-								Add Link
-							</Button>
-						)}
+						<Button onClick={handleAddNew} className="gap-2">
+							<Plus className="h-4 w-4" />
+							Add Link
+						</Button>
 					</div>
 				</div>
 
@@ -181,11 +175,10 @@ export function LinksPage() {
 					<LinksGrid
 						links={filteredLinks}
 						loading={loading}
-						isAdmin={isAdmin}
 						userFavorites={userFavorites}
 						viewMode={viewMode}
-						onEdit={isAdmin ? handleEdit : undefined}
-						onDelete={isAdmin ? handleDelete : undefined}
+						onEdit={handleEdit}
+						onDelete={handleDelete}
 						onTogglePin={handleTogglePin}
 					/>
 				)}

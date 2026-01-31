@@ -12,22 +12,26 @@ interface Variables {
 
 const categories = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-// List all categories (requires categories:read)
+// List all categories owned by the authenticated user
 categories.get('/', authMiddleware(), categoriesReadMiddleware(), async (c) => {
+	const user = c.get('user');
 	const { results } = await c.env.DB.prepare(
-		'SELECT * FROM categories ORDER BY sort_order ASC, name ASC'
-	).all();
+		'SELECT * FROM categories WHERE owner_id = ? ORDER BY sort_order ASC, name ASC'
+	)
+		.bind(user.sub)
+		.all();
 
 	return c.json({ categories: results });
 });
 
-// Get single category
+// Get single category (only if owned by the authenticated user)
 categories.get('/:id', authMiddleware(), categoriesReadMiddleware(), async (c) => {
+	const user = c.get('user');
 	const id = c.req.param('id');
 	const category = await c.env.DB.prepare(
-		'SELECT * FROM categories WHERE id = ?'
+		'SELECT * FROM categories WHERE id = ? AND owner_id = ?'
 	)
-		.bind(id)
+		.bind(id, user.sub)
 		.first();
 
 	if (!category) {
@@ -38,7 +42,9 @@ categories.get('/:id', authMiddleware(), categoriesReadMiddleware(), async (c) =
 });
 
 // Create category (requires categories:edit)
+// Sets owner_id to the authenticated user
 categories.post('/', authMiddleware(), categoriesEditMiddleware(), async (c) => {
+	const user = c.get('user');
 	const body = await c.req.json<{
 		name: string;
 		slug: string;
@@ -53,15 +59,16 @@ categories.post('/', authMiddleware(), categoriesEditMiddleware(), async (c) => 
 
 	try {
 		const result = await c.env.DB.prepare(
-			`INSERT INTO categories (name, slug, icon, color, sort_order)
-			 VALUES (?, ?, ?, ?, ?)`
+			`INSERT INTO categories (name, slug, icon, color, sort_order, owner_id)
+			 VALUES (?, ?, ?, ?, ?, ?)`
 		)
 			.bind(
 				body.name,
 				body.slug,
 				body.icon || null,
 				body.color || null,
-				body.sort_order || 0
+				body.sort_order || 0,
+				user.sub
 			)
 			.run();
 
@@ -72,7 +79,9 @@ categories.post('/', authMiddleware(), categoriesEditMiddleware(), async (c) => 
 });
 
 // Update category (requires categories:edit)
+// Only updates categories owned by the authenticated user
 categories.put('/:id', authMiddleware(), categoriesEditMiddleware(), async (c) => {
+	const user = c.get('user');
 	const id = c.req.param('id');
 	const body = await c.req.json<{
 		name?: string;
@@ -83,9 +92,9 @@ categories.put('/:id', authMiddleware(), categoriesEditMiddleware(), async (c) =
 	}>();
 
 	const existing = await c.env.DB.prepare(
-		'SELECT * FROM categories WHERE id = ?'
+		'SELECT * FROM categories WHERE id = ? AND owner_id = ?'
 	)
-		.bind(id)
+		.bind(id, user.sub)
 		.first();
 
 	if (!existing) {
@@ -95,7 +104,7 @@ categories.put('/:id', authMiddleware(), categoriesEditMiddleware(), async (c) =
 	await c.env.DB.prepare(
 		`UPDATE categories SET
 			name = ?, slug = ?, icon = ?, color = ?, sort_order = ?, updated_at = CURRENT_TIMESTAMP
-		 WHERE id = ?`
+		 WHERE id = ? AND owner_id = ?`
 	)
 		.bind(
 			body.name ?? existing.name,
@@ -103,7 +112,8 @@ categories.put('/:id', authMiddleware(), categoriesEditMiddleware(), async (c) =
 			body.icon ?? existing.icon,
 			body.color ?? existing.color,
 			body.sort_order ?? existing.sort_order,
-			id
+			id,
+			user.sub
 		)
 		.run();
 
@@ -111,10 +121,24 @@ categories.put('/:id', authMiddleware(), categoriesEditMiddleware(), async (c) =
 });
 
 // Delete category (requires categories:delete)
+// Only deletes categories owned by the authenticated user
 categories.delete('/:id', authMiddleware(), categoriesDeleteMiddleware(), async (c) => {
+	const user = c.get('user');
 	const id = c.req.param('id');
 
-	await c.env.DB.prepare('DELETE FROM categories WHERE id = ?').bind(id).run();
+	const existing = await c.env.DB.prepare(
+		'SELECT id FROM categories WHERE id = ? AND owner_id = ?'
+	)
+		.bind(id, user.sub)
+		.first();
+
+	if (!existing) {
+		return c.json({ error: 'Category not found' }, 404);
+	}
+
+	await c.env.DB.prepare('DELETE FROM categories WHERE id = ? AND owner_id = ?')
+		.bind(id, user.sub)
+		.run();
 
 	return c.json({ success: true });
 });

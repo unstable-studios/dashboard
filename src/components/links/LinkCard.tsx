@@ -25,7 +25,6 @@ export interface ServiceLink {
 
 interface LinkCardProps {
 	link: ServiceLink;
-	isAdmin?: boolean;
 	isUserPinned?: boolean;
 	onEdit?: (link: ServiceLink) => void;
 	onDelete?: (link: ServiceLink) => void;
@@ -35,7 +34,6 @@ interface LinkCardProps {
 
 export function LinkCard({
 	link,
-	isAdmin,
 	isUserPinned,
 	onEdit,
 	onDelete,
@@ -112,7 +110,7 @@ export function LinkCard({
 						)}
 					</ContextMenuItem>
 				)}
-				{isAdmin && (
+				{(onEdit || onDelete) && (
 					<>
 						<ContextMenuSeparator />
 						{onEdit && (
