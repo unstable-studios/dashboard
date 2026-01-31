@@ -7,7 +7,6 @@ import { ViewMode } from '@/hooks/useViewPreference';
 interface LinksGridProps {
 	links: ServiceLink[];
 	loading?: boolean;
-	isAdmin?: boolean;
 	userFavorites?: number[];
 	viewMode?: ViewMode;
 	onEdit?: (link: ServiceLink) => void;
@@ -19,7 +18,6 @@ interface LinksGridProps {
 export function LinksGrid({
 	links,
 	loading,
-	isAdmin,
 	userFavorites = [],
 	viewMode = 'grid',
 	onEdit,
@@ -82,8 +80,7 @@ export function LinksGrid({
 					renderItem={(link, dragHandleProps) => (
 						<LinkListItem
 							link={link}
-							isAdmin={isAdmin}
-							isUserPinned={userFavorites.includes(link.id)}
+														isUserPinned={userFavorites.includes(link.id)}
 							onEdit={onEdit}
 							onDelete={onDelete}
 							onTogglePin={onTogglePin}
@@ -99,8 +96,7 @@ export function LinksGrid({
 					<LinkListItem
 						key={link.id}
 						link={link}
-						isAdmin={isAdmin}
-						isUserPinned={userFavorites.includes(link.id)}
+												isUserPinned={userFavorites.includes(link.id)}
 						onEdit={onEdit}
 						onDelete={onDelete}
 						onTogglePin={onTogglePin}
@@ -120,8 +116,7 @@ export function LinksGrid({
 					renderItem={(link, dragHandleProps) => (
 						<LinkBarItem
 							link={link}
-							isAdmin={isAdmin}
-							isUserPinned={userFavorites.includes(link.id)}
+														isUserPinned={userFavorites.includes(link.id)}
 							onEdit={onEdit}
 							onDelete={onDelete}
 							onTogglePin={onTogglePin}
@@ -137,8 +132,7 @@ export function LinksGrid({
 					<LinkBarItem
 						key={link.id}
 						link={link}
-						isAdmin={isAdmin}
-						isUserPinned={userFavorites.includes(link.id)}
+												isUserPinned={userFavorites.includes(link.id)}
 						onEdit={onEdit}
 						onDelete={onDelete}
 						onTogglePin={onTogglePin}
@@ -157,8 +151,7 @@ export function LinksGrid({
 				renderItem={(link, dragHandleProps) => (
 					<LinkCard
 						link={link}
-						isAdmin={isAdmin}
-						isUserPinned={userFavorites.includes(link.id)}
+												isUserPinned={userFavorites.includes(link.id)}
 						onEdit={onEdit}
 						onDelete={onDelete}
 						onTogglePin={onTogglePin}
@@ -175,8 +168,7 @@ export function LinksGrid({
 				<LinkCard
 					key={link.id}
 					link={link}
-					isAdmin={isAdmin}
-					isUserPinned={userFavorites.includes(link.id)}
+										isUserPinned={userFavorites.includes(link.id)}
 					onEdit={onEdit}
 					onDelete={onDelete}
 					onTogglePin={onTogglePin}

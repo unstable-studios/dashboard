@@ -12,7 +12,6 @@ import { Document } from './DocCard';
 
 interface DocListItemProps {
 	doc: Document;
-	isAdmin?: boolean;
 	isUserPinned?: boolean;
 	onEdit?: (doc: Document) => void;
 	onDelete?: (doc: Document) => void;
@@ -20,7 +19,7 @@ interface DocListItemProps {
 	dragHandleProps?: DragHandleProps;
 }
 
-export function DocListItem({ doc, isAdmin, isUserPinned, onEdit, onDelete, onTogglePin, dragHandleProps }: DocListItemProps) {
+export function DocListItem({ doc, isUserPinned, onEdit, onDelete, onTogglePin, dragHandleProps }: DocListItemProps) {
 	const navigate = useNavigate();
 	const isExternal = !!doc.external_url;
 
@@ -121,7 +120,7 @@ export function DocListItem({ doc, isAdmin, isUserPinned, onEdit, onDelete, onTo
 						)}
 					</ContextMenuItem>
 				)}
-				{isAdmin && (
+				{(onEdit || onDelete) && (
 					<>
 						<ContextMenuSeparator />
 						{onEdit && (

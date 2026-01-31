@@ -7,7 +7,6 @@ import { ViewMode } from '@/hooks/useViewPreference';
 interface DocListProps {
 	documents: Document[];
 	loading?: boolean;
-	isAdmin?: boolean;
 	userFavorites?: number[];
 	viewMode?: ViewMode;
 	onEdit?: (doc: Document) => void;
@@ -16,7 +15,7 @@ interface DocListProps {
 	onReorder?: (orderedIds: number[]) => void;
 }
 
-export function DocList({ documents, loading, isAdmin, userFavorites, viewMode = 'grid', onEdit, onDelete, onTogglePin, onReorder }: DocListProps) {
+export function DocList({ documents, loading, userFavorites, viewMode = 'grid', onEdit, onDelete, onTogglePin, onReorder }: DocListProps) {
 	if (loading) {
 		if (viewMode === 'list') {
 			return (
@@ -72,8 +71,7 @@ export function DocList({ documents, loading, isAdmin, userFavorites, viewMode =
 					renderItem={(doc, dragHandleProps) => (
 						<DocListItem
 							doc={doc}
-							isAdmin={isAdmin}
-							isUserPinned={userFavorites?.includes(doc.id)}
+														isUserPinned={userFavorites?.includes(doc.id)}
 							onEdit={onEdit}
 							onDelete={onDelete}
 							onTogglePin={onTogglePin}
@@ -89,8 +87,7 @@ export function DocList({ documents, loading, isAdmin, userFavorites, viewMode =
 					<DocListItem
 						key={doc.id}
 						doc={doc}
-						isAdmin={isAdmin}
-						isUserPinned={userFavorites?.includes(doc.id)}
+												isUserPinned={userFavorites?.includes(doc.id)}
 						onEdit={onEdit}
 						onDelete={onDelete}
 						onTogglePin={onTogglePin}
@@ -110,8 +107,7 @@ export function DocList({ documents, loading, isAdmin, userFavorites, viewMode =
 					renderItem={(doc, dragHandleProps) => (
 						<DocBarItem
 							doc={doc}
-							isAdmin={isAdmin}
-							isUserPinned={userFavorites?.includes(doc.id)}
+														isUserPinned={userFavorites?.includes(doc.id)}
 							onEdit={onEdit}
 							onDelete={onDelete}
 							onTogglePin={onTogglePin}
@@ -127,8 +123,7 @@ export function DocList({ documents, loading, isAdmin, userFavorites, viewMode =
 					<DocBarItem
 						key={doc.id}
 						doc={doc}
-						isAdmin={isAdmin}
-						isUserPinned={userFavorites?.includes(doc.id)}
+												isUserPinned={userFavorites?.includes(doc.id)}
 						onEdit={onEdit}
 						onDelete={onDelete}
 						onTogglePin={onTogglePin}
@@ -147,8 +142,7 @@ export function DocList({ documents, loading, isAdmin, userFavorites, viewMode =
 				renderItem={(doc, dragHandleProps) => (
 					<DocCard
 						doc={doc}
-						isAdmin={isAdmin}
-						isUserPinned={userFavorites?.includes(doc.id)}
+												isUserPinned={userFavorites?.includes(doc.id)}
 						onEdit={onEdit}
 						onDelete={onDelete}
 						onTogglePin={onTogglePin}
@@ -165,8 +159,7 @@ export function DocList({ documents, loading, isAdmin, userFavorites, viewMode =
 				<DocCard
 					key={doc.id}
 					doc={doc}
-					isAdmin={isAdmin}
-					isUserPinned={userFavorites?.includes(doc.id)}
+										isUserPinned={userFavorites?.includes(doc.id)}
 					onEdit={onEdit}
 					onDelete={onDelete}
 					onTogglePin={onTogglePin}

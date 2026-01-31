@@ -13,7 +13,6 @@ import { Document } from './DocCard';
 
 interface DocBarItemProps {
 	doc: Document;
-	isAdmin?: boolean;
 	isUserPinned?: boolean;
 	onEdit?: (doc: Document) => void;
 	onDelete?: (doc: Document) => void;
@@ -23,7 +22,6 @@ interface DocBarItemProps {
 
 export function DocBarItem({
 	doc,
-	isAdmin,
 	isUserPinned,
 	onEdit,
 	onDelete,
@@ -127,7 +125,7 @@ export function DocBarItem({
 						)}
 					</ContextMenuItem>
 				)}
-				{isAdmin && (
+				{(onEdit || onDelete) && (
 					<>
 						<ContextMenuSeparator />
 						{onEdit && (

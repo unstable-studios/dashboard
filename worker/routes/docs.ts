@@ -4,7 +4,6 @@ import {
 	docsReadMiddleware,
 	docsEditMiddleware,
 	docsDeleteMiddleware,
-	canReadUnpublishedDocs,
 } from '../middleware/permissions';
 
 interface Variables {
@@ -13,25 +12,18 @@ interface Variables {
 
 const docs = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-// List all published documents (optionally filtered by category)
+// List all documents owned by the authenticated user (optionally filtered by category)
 docs.get('/', authMiddleware(), docsReadMiddleware(), async (c) => {
 	const categoryId = c.req.query('category_id');
-	const includeUnpublished = c.req.query('include_unpublished') === 'true';
 	const user = c.get('user');
-	const hasUnpublishedAccess = canReadUnpublishedDocs(user.permissions);
 
 	let query = `
 		SELECT d.*, c.name as category_name, c.slug as category_slug
 		FROM documents d
 		LEFT JOIN categories c ON d.category_id = c.id
-		WHERE 1=1
+		WHERE d.owner_id = ?
 	`;
-	const params: (string | number)[] = [];
-
-	// Only users with unpublished access can see unpublished documents
-	if (!includeUnpublished || !hasUnpublishedAccess) {
-		query += ' AND d.is_published = 1';
-	}
+	const params: (string | number)[] = [user.sub];
 
 	if (categoryId) {
 		query += ' AND d.category_id = ?';
@@ -41,42 +33,34 @@ docs.get('/', authMiddleware(), docsReadMiddleware(), async (c) => {
 	query += ' ORDER BY d.updated_at DESC';
 
 	const stmt = c.env.DB.prepare(query);
-	const { results } = params.length > 0
-		? await stmt.bind(...params).all()
-		: await stmt.all();
+	const { results } = await stmt.bind(...params).all();
 
 	return c.json({ documents: results });
 });
 
-// Get single document by slug
+// Get single document by slug (only if owned by the authenticated user)
 docs.get('/:slug', authMiddleware(), docsReadMiddleware(), async (c) => {
 	const slug = c.req.param('slug');
+	const user = c.get('user');
 
 	const doc = await c.env.DB.prepare(
 		`SELECT d.*, c.name as category_name, c.slug as category_slug
 		 FROM documents d
 		 LEFT JOIN categories c ON d.category_id = c.id
-		 WHERE d.slug = ?`
+		 WHERE d.slug = ? AND d.owner_id = ?`
 	)
-		.bind(slug)
+		.bind(slug, user.sub)
 		.first();
 
 	if (!doc) {
 		return c.json({ error: 'Document not found' }, 404);
 	}
 
-	// Only show unpublished docs to users with unpublished access
-	if (!doc.is_published) {
-		const user = c.get('user');
-		if (!canReadUnpublishedDocs(user.permissions)) {
-			return c.json({ error: 'Document not found' }, 404);
-		}
-	}
-
 	return c.json({ document: doc });
 });
 
 // Create document (requires docs:edit)
+// Sets owner_id to the authenticated user
 docs.post('/', authMiddleware(), docsEditMiddleware(), async (c) => {
 	const user = c.get('user');
 	const body = await c.req.json<{
@@ -104,8 +88,8 @@ docs.post('/', authMiddleware(), docsEditMiddleware(), async (c) => {
 
 	try {
 		const result = await c.env.DB.prepare(
-			`INSERT INTO documents (title, slug, content, excerpt, category_id, external_url, external_type, is_published, created_by, updated_by)
-			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+			`INSERT INTO documents (title, slug, content, excerpt, category_id, external_url, external_type, is_published, created_by, updated_by, owner_id)
+			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 		)
 			.bind(
 				body.title,
@@ -117,7 +101,8 @@ docs.post('/', authMiddleware(), docsEditMiddleware(), async (c) => {
 				body.external_type || null,
 				body.is_published !== false ? 1 : 0,
 				user.email,
-				user.email
+				user.email,
+				user.sub
 			)
 			.run();
 
@@ -132,6 +117,7 @@ docs.post('/', authMiddleware(), docsEditMiddleware(), async (c) => {
 });
 
 // Update document (requires docs:edit)
+// Only updates documents owned by the authenticated user
 docs.put('/:slug', authMiddleware(), docsEditMiddleware(), async (c) => {
 	const slug = c.req.param('slug');
 	const user = c.get('user');
@@ -147,9 +133,9 @@ docs.put('/:slug', authMiddleware(), docsEditMiddleware(), async (c) => {
 	}>();
 
 	const existing = await c.env.DB.prepare(
-		'SELECT * FROM documents WHERE slug = ?'
+		'SELECT * FROM documents WHERE slug = ? AND owner_id = ?'
 	)
-		.bind(slug)
+		.bind(slug, user.sub)
 		.first();
 
 	if (!existing) {
@@ -194,7 +180,7 @@ docs.put('/:slug', authMiddleware(), docsEditMiddleware(), async (c) => {
 				title = ?, slug = ?, content = ?, excerpt = ?,
 				category_id = ?, external_url = ?, external_type = ?,
 				is_published = ?, updated_at = CURRENT_TIMESTAMP, updated_by = ?
-			 WHERE slug = ?`
+			 WHERE slug = ? AND owner_id = ?`
 		)
 			.bind(
 				body.title ?? existing.title,
@@ -216,7 +202,8 @@ docs.put('/:slug', authMiddleware(), docsEditMiddleware(), async (c) => {
 						: 0
 					: existing.is_published,
 				user.email,
-				slug
+				slug,
+				user.sub
 			)
 			.run();
 
@@ -229,24 +216,17 @@ docs.put('/:slug', authMiddleware(), docsEditMiddleware(), async (c) => {
 	}
 });
 
-// List document versions
+// List document versions (only for documents owned by the authenticated user)
 docs.get('/:slug/versions', authMiddleware(), docsReadMiddleware(), async (c) => {
 	const slug = c.req.param('slug');
+	const user = c.get('user');
 
-	const doc = await c.env.DB.prepare('SELECT id, is_published FROM documents WHERE slug = ?')
-		.bind(slug)
-		.first<{ id: number; is_published: number }>();
+	const doc = await c.env.DB.prepare('SELECT id FROM documents WHERE slug = ? AND owner_id = ?')
+		.bind(slug, user.sub)
+		.first<{ id: number }>();
 
 	if (!doc) {
 		return c.json({ error: 'Document not found' }, 404);
-	}
-
-	// Check unpublished access
-	if (!doc.is_published) {
-		const user = c.get('user');
-		if (!canReadUnpublishedDocs(user.permissions)) {
-			return c.json({ error: 'Document not found' }, 404);
-		}
 	}
 
 	const { results } = await c.env.DB.prepare(
@@ -261,29 +241,22 @@ docs.get('/:slug/versions', authMiddleware(), docsReadMiddleware(), async (c) =>
 	return c.json({ versions: results });
 });
 
-// Get specific document version
+// Get specific document version (only for documents owned by the authenticated user)
 docs.get('/:slug/versions/:versionNumber', authMiddleware(), docsReadMiddleware(), async (c) => {
 	const slug = c.req.param('slug');
 	const versionNumber = parseInt(c.req.param('versionNumber'), 10);
+	const user = c.get('user');
 
 	if (isNaN(versionNumber)) {
 		return c.json({ error: 'Invalid version number' }, 400);
 	}
 
-	const doc = await c.env.DB.prepare('SELECT id, is_published FROM documents WHERE slug = ?')
-		.bind(slug)
-		.first<{ id: number; is_published: number }>();
+	const doc = await c.env.DB.prepare('SELECT id FROM documents WHERE slug = ? AND owner_id = ?')
+		.bind(slug, user.sub)
+		.first<{ id: number }>();
 
 	if (!doc) {
 		return c.json({ error: 'Document not found' }, 404);
-	}
-
-	// Check unpublished access
-	if (!doc.is_published) {
-		const user = c.get('user');
-		if (!canReadUnpublishedDocs(user.permissions)) {
-			return c.json({ error: 'Document not found' }, 404);
-		}
 	}
 
 	const version = await c.env.DB.prepare(
@@ -302,16 +275,24 @@ docs.get('/:slug/versions/:versionNumber', authMiddleware(), docsReadMiddleware(
 });
 
 // Delete document (requires docs:delete)
+// Only deletes documents owned by the authenticated user
 docs.delete('/:slug', authMiddleware(), docsDeleteMiddleware(), async (c) => {
 	const slug = c.req.param('slug');
+	const user = c.get('user');
 
-	const result = await c.env.DB.prepare('DELETE FROM documents WHERE slug = ?')
-		.bind(slug)
-		.run();
+	const existing = await c.env.DB.prepare(
+		'SELECT id FROM documents WHERE slug = ? AND owner_id = ?'
+	)
+		.bind(slug, user.sub)
+		.first();
 
-	if (result.meta.changes === 0) {
+	if (!existing) {
 		return c.json({ error: 'Document not found' }, 404);
 	}
+
+	await c.env.DB.prepare('DELETE FROM documents WHERE slug = ? AND owner_id = ?')
+		.bind(slug, user.sub)
+		.run();
 
 	return c.json({ success: true });
 });

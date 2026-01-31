@@ -27,22 +27,12 @@ export function DocsPage() {
 	const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
-	const [isAdmin, setIsAdmin] = useState(false);
 	const [userFavorites, setUserFavorites] = useState<number[]>([]);
 
 	const fetchData = async () => {
 		try {
-			// First get user info to check if admin
-			const meRes = await authFetch('/api/auth/me', getAccessTokenSilently);
-			const meData = meRes.ok ? await meRes.json() : { isAdmin: false };
-			const userIsAdmin = meData.isAdmin || false;
-			setIsAdmin(userIsAdmin);
-
-			// Fetch docs with unpublished if admin
-			const docsUrl = userIsAdmin ? '/api/docs?include_unpublished=true' : '/api/docs';
-
 			const [docsRes, categoriesRes, prefsRes] = await Promise.all([
-				authFetch(docsUrl, getAccessTokenSilently),
+				authFetch('/api/docs', getAccessTokenSilently),
 				authFetch('/api/categories', getAccessTokenSilently),
 				authFetch('/api/preferences', getAccessTokenSilently),
 			]);
@@ -130,14 +120,12 @@ export function DocsPage() {
 					</div>
 					<div className="flex items-center gap-3">
 						<ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
-						{isAdmin && (
-							<Link to="/docs/new">
-								<Button className="gap-2">
-									<Plus className="h-4 w-4" />
-									New Document
-								</Button>
-							</Link>
-						)}
+						<Link to="/docs/new">
+							<Button className="gap-2">
+								<Plus className="h-4 w-4" />
+								New Document
+							</Button>
+						</Link>
 					</div>
 				</div>
 
@@ -169,11 +157,10 @@ export function DocsPage() {
 					<DocList
 						documents={filteredDocs}
 						loading={loading}
-						isAdmin={isAdmin}
 						userFavorites={userFavorites}
 						viewMode={viewMode}
-						onEdit={isAdmin ? handleEdit : undefined}
-						onDelete={isAdmin ? handleDelete : undefined}
+						onEdit={handleEdit}
+						onDelete={handleDelete}
 						onTogglePin={handleTogglePin}
 					/>
 				)}

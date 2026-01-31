@@ -171,9 +171,9 @@ export async function handleScheduled(
 
 	console.log(`Found ${users.length} users to process`);
 
-	// Type-safe access to optional DASHBOARD_BASE_URL env var
+	// Type-safe access to optional HUB_BASE_URL env var
 	const baseUrl =
-		(env as Env & { DASHBOARD_BASE_URL?: string }).DASHBOARD_BASE_URL || 'https://dashboard.unstablestudios.com';
+		(env as Env & { HUB_BASE_URL?: string }).HUB_BASE_URL || 'https://hub.unstablestudios.com';
 
 	for (const user of users) {
 		try {

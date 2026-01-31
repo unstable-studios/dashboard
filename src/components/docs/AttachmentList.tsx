@@ -14,7 +14,6 @@ export interface Attachment {
 
 interface AttachmentListProps {
 	attachments: Attachment[];
-	isAdmin?: boolean;
 	onDownload: (attachment: Attachment) => void;
 	onDelete?: (attachment: Attachment) => void;
 }
@@ -47,7 +46,6 @@ function formatFileSize(bytes: number): string {
 
 export function AttachmentList({
 	attachments,
-	isAdmin,
 	onDownload,
 	onDelete,
 }: AttachmentListProps) {
@@ -85,7 +83,7 @@ export function AttachmentList({
 							>
 								<Download className="h-4 w-4" />
 							</Button>
-							{isAdmin && onDelete && (
+							{onDelete && (
 								<Button
 									variant="ghost"
 									size="icon"

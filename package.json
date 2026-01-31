@@ -1,9 +1,9 @@
 {
 	"name": "dashboard",
 	"private": true,
-	"version": "1.12.0",
+	"version": "1.14.0",
 	"type": "module",
-	"description": "The Hub - Internal dashboard for Unstable Studios",
+	"description": "Dashboard - Personal dashboard for organizing links, documents, and reminders",
 	"dependencies": {
 		"@auth0/auth0-react": "^2.11.0",
 		"@dnd-kit/core": "^6.3.1",

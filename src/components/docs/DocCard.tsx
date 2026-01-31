@@ -30,7 +30,6 @@ export interface Document {
 
 interface DocCardProps {
 	doc: Document;
-	isAdmin?: boolean;
 	isUserPinned?: boolean;
 	onEdit?: (doc: Document) => void;
 	onDelete?: (doc: Document) => void;
@@ -38,7 +37,7 @@ interface DocCardProps {
 	dragHandleProps?: DragHandleProps;
 }
 
-export function DocCard({ doc, isAdmin, isUserPinned, onEdit, onDelete, onTogglePin, dragHandleProps }: DocCardProps) {
+export function DocCard({ doc, isUserPinned, onEdit, onDelete, onTogglePin, dragHandleProps }: DocCardProps) {
 	const navigate = useNavigate();
 	const isExternal = !!doc.external_url;
 
@@ -138,7 +137,7 @@ export function DocCard({ doc, isAdmin, isUserPinned, onEdit, onDelete, onToggle
 						)}
 					</ContextMenuItem>
 				)}
-				{isAdmin && (
+				{(onEdit || onDelete) && (
 					<>
 						<ContextMenuSeparator />
 						{onEdit && (
