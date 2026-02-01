@@ -82,7 +82,9 @@ function generateToken(): string {
 	bytes[6] = (bytes[6] & 0x0f) | 0x40;
 	bytes[8] = (bytes[8] & 0x3f) | 0x80;
 
-	const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+	const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join(
+		''
+	);
 
 	return (
 		hex.slice(0, 8) +
@@ -165,15 +167,18 @@ export async function handleScheduled(
 		.all<UserPrefRow>();
 
 	if (!users || users.length === 0) {
-		console.log('No users with email notifications enabled in target timezones');
+		console.log(
+			'No users with email notifications enabled in target timezones'
+		);
 		return;
 	}
 
 	console.log(`Found ${users.length} users to process`);
 
-	// Type-safe access to optional HUB_BASE_URL env var
+	// Type-safe access to optional DASHBOARD_BASE_URL env var
 	const baseUrl =
-		(env as Env & { HUB_BASE_URL?: string }).HUB_BASE_URL || 'https://hub.unstablestudios.com';
+		(env as Env & { DASHBOARD_BASE_URL?: string }).DASHBOARD_BASE_URL ||
+		'https://dashboard.unstablestudios.com';
 
 	for (const user of users) {
 		try {
@@ -324,8 +329,16 @@ async function processReminder(
 		dashboard: baseUrl,
 	};
 
-	const htmlBody = generateReminderEmailHtml(reminderData, actionUrls, isDueToday);
-	const textBody = generateReminderEmailText(reminderData, actionUrls, isDueToday);
+	const htmlBody = generateReminderEmailHtml(
+		reminderData,
+		actionUrls,
+		isDueToday
+	);
+	const textBody = generateReminderEmailText(
+		reminderData,
+		actionUrls,
+		isDueToday
+	);
 
 	// Send email
 	const success = await sendEmail(

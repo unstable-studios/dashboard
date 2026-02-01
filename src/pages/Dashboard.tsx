@@ -34,9 +34,13 @@ async function initializeOnboarding(
 	getAccessTokenSilently: () => Promise<string>
 ): Promise<boolean> {
 	try {
-		const res = await authFetch('/api/onboarding/initialize', getAccessTokenSilently, {
-			method: 'POST',
-		});
+		const res = await authFetch(
+			'/api/onboarding/initialize',
+			getAccessTokenSilently,
+			{
+				method: 'POST',
+			}
+		);
 		if (res.ok) {
 			const data = await res.json();
 			return !data.alreadyCompleted;
@@ -49,9 +53,12 @@ async function initializeOnboarding(
 
 export function Dashboard() {
 	const { getAccessTokenSilently } = useAuth0();
-	const [linksViewMode, setLinksViewMode] = useViewPreference('dashboard-links');
+	const [linksViewMode, setLinksViewMode] =
+		useViewPreference('dashboard-links');
 	const [docsViewMode, setDocsViewMode] = useViewPreference('dashboard-docs');
-	const [remindersViewMode, setRemindersViewMode] = useViewPreference('dashboard-reminders');
+	const [remindersViewMode, setRemindersViewMode] = useViewPreference(
+		'dashboard-reminders'
+	);
 	const [allLinks, setAllLinks] = useState<ServiceLink[]>([]);
 	const [allDocs, setAllDocs] = useState<Document[]>([]);
 	const [reminders, setReminders] = useState<Reminder[]>([]);
@@ -251,18 +258,19 @@ export function Dashboard() {
 						{showWelcome && (
 							<Card className='border-primary/20 bg-primary/5 relative'>
 								<CardContent className='flex items-start gap-4 py-4'>
-									<Sparkles className='text-primary h-6 w-6 flex-shrink-0 mt-0.5' />
-									<div className='flex-1 min-w-0'>
-										<h3 className='font-semibold'>Welcome to Echo Hub!</h3>
-										<p className='text-muted-foreground text-sm mt-1'>
-											We&apos;ve set up some starter content for you. Check out your new links,
-											read the welcome document, and explore the calendar for your first reminder.
+									<Sparkles className='text-primary mt-0.5 h-6 w-6 flex-shrink-0' />
+									<div className='min-w-0 flex-1'>
+										<h3 className='font-semibold'>Welcome to Dashboard!</h3>
+										<p className='text-muted-foreground mt-1 text-sm'>
+											We&apos;ve set up some starter content for you. Check out
+											your new links, read the welcome document, and explore the
+											calendar for your first reminder.
 										</p>
 									</div>
 									<Button
 										variant='ghost'
 										size='icon'
-										className='flex-shrink-0 h-8 w-8'
+										className='h-8 w-8 flex-shrink-0'
 										onClick={() => setShowWelcome(false)}
 									>
 										<X className='h-4 w-4' />
@@ -280,7 +288,10 @@ export function Dashboard() {
 										Upcoming Reminders
 									</h2>
 									<div className='flex items-center gap-2'>
-										<ViewToggle viewMode={remindersViewMode} onViewModeChange={setRemindersViewMode} />
+										<ViewToggle
+											viewMode={remindersViewMode}
+											onViewModeChange={setRemindersViewMode}
+										/>
 										<Link to='/calendar'>
 											<Button variant='ghost' size='sm'>
 												View All
@@ -308,11 +319,14 @@ export function Dashboard() {
 								</h2>
 								<div className='flex items-center gap-2'>
 									{!hasUserLinkPins && !loading && pinnedLinks.length > 0 && (
-										<p className='text-muted-foreground text-sm hidden sm:block'>
+										<p className='text-muted-foreground hidden text-sm sm:block'>
 											Right-click any link to pin your favorites
 										</p>
 									)}
-									<ViewToggle viewMode={linksViewMode} onViewModeChange={setLinksViewMode} />
+									<ViewToggle
+										viewMode={linksViewMode}
+										onViewModeChange={setLinksViewMode}
+									/>
 									{hasUserLinkPins && !loading && pinnedLinks.length > 0 && (
 										<Link to='/links'>
 											<Button variant='ghost' size='sm'>
@@ -354,7 +368,10 @@ export function Dashboard() {
 										Pinned Documents
 									</h2>
 									<div className='flex items-center gap-2'>
-										<ViewToggle viewMode={docsViewMode} onViewModeChange={setDocsViewMode} />
+										<ViewToggle
+											viewMode={docsViewMode}
+											onViewModeChange={setDocsViewMode}
+										/>
 										{!loading && pinnedDocs.length > 0 && (
 											<Link to='/docs'>
 												<Button variant='ghost' size='sm'>

@@ -4,9 +4,9 @@ Manages Auth0 resources for the Dashboard application.
 
 ## Resources
 
-- **Client**: `spa::echo-hub` (SPA application - legacy name)
-- **API**: `api://echo-hub` (Resource Server - legacy identifier)
-- **Roles**: `echo_user`, `echo_admin`
+- **Client**: `spa::dashboard` (SPA application - legacy name)
+- **API**: `api://dashboard` (Resource Server - legacy identifier)
+- **Roles**: `dashboard_user`, `dashboard_admin`
 - **Scopes**: Fine-grained permissions for docs, links, categories, attachments, preferences, calendar
 
 ## Usage
@@ -24,15 +24,15 @@ Before first apply in a new state, import existing resources:
 
 ```bash
 # Import the SPA client
-terraform import auth0_client.echo_hub b88w8TPaj33tIEyeUBgK8y2PiVpJ9ozA
+terraform import auth0_client.dashboard b88w8TPaj33tIEyeUBgK8y2PiVpJ9ozA
 
 # Import the API resource server (get ID from Management API first)
-# GET /api/v2/resource-servers?identifier=api://echo-hub
-terraform import auth0_resource_server.echo_hub <resource_server_id>
+# GET /api/v2/resource-servers?identifier=api://dashboard
+terraform import auth0_resource_server.dashboard <resource_server_id>
 
 # Import roles
-terraform import auth0_role.echo_user rol_5QDfnbL7Ft29wfE4
-terraform import auth0_role.echo_admin rol_azDctu5fZfzX1A4L
+terraform import auth0_role.dashboard_user rol_5QDfnbL7Ft29wfE4
+terraform import auth0_role.dashboard_admin rol_azDctu5fZfzX1A4L
 ```
 
 ## Outputs
