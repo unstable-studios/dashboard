@@ -12,7 +12,7 @@ console.log("[Auth] Config:", {
   clientId: auth0Config.clientId,
   authorizationParams: auth0Config.authorizationParams,
   rawDomain: import.meta.env.VITE_AUTH0_DOMAIN,
-  rawClientId: import.meta.env.VITE_AUTH0_CLIENT_ID,
+  rawClientId: import.meta.env.VITE_AUTH0_APP_CLIENT_ID,
 });
 
 export function AuthProvider({ children }: AuthProviderProps) {
