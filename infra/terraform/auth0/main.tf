@@ -40,8 +40,7 @@ resource "auth0_client" "dashboard" {
   app_type    = "spa"
 
   client_metadata = {
-    internal_id = "spa::dashboard"
-    is_internal = "true"
+    app_id = "spa::dashboard"
   }
 
   callbacks           = local.callbacks
@@ -53,6 +52,9 @@ resource "auth0_client" "dashboard" {
 
   oidc_conformant = true
   grant_types     = ["authorization_code", "refresh_token"]
+
+  # Organization login - allow but don't require (supports enterprise orgs)
+  organization_usage = "allow"
 
   jwt_configuration {
     alg                 = "RS256"

@@ -57,14 +57,14 @@ export function LoginPage() {
 								Welcome to the Dashboard
 							</h1>
 							<p className='text-muted-foreground text-sm'>
-								Sign in to access Unstable Studios resources
+								Sign in to continue to your dashboard
 							</p>
 						</div>
 						<Button size='lg' className='w-full' onClick={handleLogin}>
 							Continue with Auth0
 						</Button>
 						<p className='text-muted-foreground text-center text-xs'>
-							Internal use only. Requires organization membership.
+							By signing in, you agree to our Terms of Service.
 						</p>
 					</div>
 				</CardContent>
