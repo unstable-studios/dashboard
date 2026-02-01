@@ -27,9 +27,9 @@ app.get('/api/debug/config', authMiddleware(), (c) => {
 	console.log('[Worker] Debug config requested');
 	return c.json({
 		auth0_domain: c.env.AUTH0_DOMAIN || 'NOT SET',
-		auth0_audience: c.env.AUTH0_AUDIENCE || 'NOT SET',
-		auth0_client_id: c.env.AUTH0_CLIENT_ID ? 'SET (hidden)' : 'NOT SET',
-		auth0_client_secret: c.env.AUTH0_CLIENT_SECRET ? 'SET (hidden)' : 'NOT SET',
+		auth0_app_audience: c.env.AUTH0_APP_AUDIENCE || 'NOT SET',
+		auth0_app_client_id: c.env.AUTH0_APP_CLIENT_ID ? 'SET (hidden)' : 'NOT SET',
+		auth0_app_client_secret: c.env.AUTH0_APP_CLIENT_SECRET ? 'SET (hidden)' : 'NOT SET',
 		db_bound: !!c.env.DB,
 		cache_bound: !!c.env.CACHE,
 	});

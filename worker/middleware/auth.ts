@@ -109,7 +109,7 @@ export async function verifyToken(
 
 		const { payload } = await jwtVerify(token, jwks, {
 			issuer,
-			audience: env.AUTH0_AUDIENCE,
+			audience: env.AUTH0_APP_AUDIENCE,
 		});
 
 		let result = payload as Auth0JWTPayload;
