@@ -75,7 +75,9 @@ emailActions.get('/:token', async (c) => {
 			.run();
 	} else {
 		// Unexpected or unsupported action type
-		return c.html(generateErrorPage('Invalid or unsupported action link', c.env));
+		return c.html(
+			generateErrorPage('Invalid or unsupported action link', c.env)
+		);
 	}
 
 	// Mark token as used
@@ -102,9 +104,15 @@ emailActions.get('/:token', async (c) => {
 	);
 });
 
-function generateSuccessPage(reminderTitle: string, message: string, env: Env): string {
-	// Type-safe access to optional HUB_BASE_URL env var (URLs are NOT escaped)
-	const baseUrl = (env as Env & { HUB_BASE_URL?: string }).HUB_BASE_URL || 'https://hub.unstablestudios.com';
+function generateSuccessPage(
+	reminderTitle: string,
+	message: string,
+	env: Env
+): string {
+	// Type-safe access to optional DASHBOARD_BASE_URL env var (URLs are NOT escaped)
+	const baseUrl =
+		(env as Env & { DASHBOARD_BASE_URL?: string }).DASHBOARD_BASE_URL ||
+		'https://dashboard.unstablestudios.com';
 	const escapedTitle = escapeHtml(reminderTitle);
 	const escapedMessage = escapeHtml(message);
 
@@ -114,7 +122,7 @@ function generateSuccessPage(reminderTitle: string, message: string, env: Env): 
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Action Complete - Echo Hub</title>
+  <title>Action Complete - Dashboard</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; background-color: #f9fafb;">
   <div style="max-width: 500px; margin: 40px auto; padding: 20px;">
@@ -133,8 +141,10 @@ function generateSuccessPage(reminderTitle: string, message: string, env: Env): 
 }
 
 function generateErrorPage(message: string, env: Env): string {
-	// Type-safe access to optional HUB_BASE_URL env var (URLs are NOT escaped)
-	const baseUrl = (env as Env & { HUB_BASE_URL?: string }).HUB_BASE_URL || 'https://hub.unstablestudios.com';
+	// Type-safe access to optional DASHBOARD_BASE_URL env var (URLs are NOT escaped)
+	const baseUrl =
+		(env as Env & { DASHBOARD_BASE_URL?: string }).DASHBOARD_BASE_URL ||
+		'https://dashboard.unstablestudios.com';
 	const escapedMessage = escapeHtml(message);
 
 	return `
@@ -143,7 +153,7 @@ function generateErrorPage(message: string, env: Env): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Error - Echo Hub</title>
+  <title>Error - Dashboard</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; background-color: #f9fafb;">
   <div style="max-width: 500px; margin: 40px auto; padding: 20px;">

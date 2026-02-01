@@ -15,9 +15,6 @@ const SCOPES = [
 	'openid',
 	'profile',
 	'email',
-	// Legacy scopes (backward compatibility)
-	'hub:read',
-	'hub:edit',
 	// Document scopes
 	'docs:read',
 	'docs:read:unpublished',

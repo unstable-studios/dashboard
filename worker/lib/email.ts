@@ -75,15 +75,14 @@ export function generateReminderEmailHtml(
 	actionUrls: ActionUrls,
 	isDueToday: boolean
 ): string {
-	const formattedDate = new Date(reminder.nextDue + 'T00:00:00Z').toLocaleDateString(
-		'en-US',
-		{
-			weekday: 'long',
-			month: 'long',
-			day: 'numeric',
-			year: 'numeric',
-		}
-	);
+	const formattedDate = new Date(
+		reminder.nextDue + 'T00:00:00Z'
+	).toLocaleDateString('en-US', {
+		weekday: 'long',
+		month: 'long',
+		day: 'numeric',
+		year: 'numeric',
+	});
 
 	// Escape user-controlled content to prevent XSS
 	const escapedTitle = escapeHtml(reminder.title);
@@ -91,9 +90,10 @@ export function generateReminderEmailHtml(
 	const escapedDocTitle = escapeHtml(reminder.docTitle);
 
 	// Note: URLs are NOT escaped as they need to remain valid hrefs
-	const docLink = reminder.docTitle && reminder.docUrl
-		? `<p style="margin: 16px 0;"><a href="${actionUrls.dashboard}${reminder.docUrl}" style="color: #3b82f6;">📄 ${escapedDocTitle}</a></p>`
-		: '';
+	const docLink =
+		reminder.docTitle && reminder.docUrl
+			? `<p style="margin: 16px 0;"><a href="${actionUrls.dashboard}${reminder.docUrl}" style="color: #3b82f6;">📄 ${escapedDocTitle}</a></p>`
+			: '';
 
 	const snoozeButton = isDueToday
 		? ''
@@ -122,7 +122,7 @@ export function generateReminderEmailHtml(
       </div>
 
       <p style="color: #9ca3af; font-size: 12px; margin-top: 24px;">
-        <a href="${actionUrls.dashboard}" style="color: #6b7280;">View all reminders in Echo Hub</a>
+        <a href="${actionUrls.dashboard}" style="color: #6b7280;">View all reminders in Dashboard</a>
       </p>
     </div>
   </div>
@@ -136,15 +136,14 @@ export function generateReminderEmailText(
 	actionUrls: ActionUrls,
 	isDueToday: boolean
 ): string {
-	const formattedDate = new Date(reminder.nextDue + 'T00:00:00Z').toLocaleDateString(
-		'en-US',
-		{
-			weekday: 'long',
-			month: 'long',
-			day: 'numeric',
-			year: 'numeric',
-		}
-	);
+	const formattedDate = new Date(
+		reminder.nextDue + 'T00:00:00Z'
+	).toLocaleDateString('en-US', {
+		weekday: 'long',
+		month: 'long',
+		day: 'numeric',
+		year: 'numeric',
+	});
 
 	const lines = [
 		`🔔 Reminder: ${reminder.title}`,
@@ -157,7 +156,11 @@ export function generateReminderEmailText(
 	}
 
 	if (reminder.docTitle && reminder.docUrl) {
-		lines.push(`📄 Related Document: ${reminder.docTitle}`, `${actionUrls.dashboard}${reminder.docUrl}`, '');
+		lines.push(
+			`📄 Related Document: ${reminder.docTitle}`,
+			`${actionUrls.dashboard}${reminder.docUrl}`,
+			''
+		);
 	}
 
 	lines.push('---', '');

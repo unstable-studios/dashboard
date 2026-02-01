@@ -2,7 +2,7 @@ terraform {
   required_version = ">= 1.9"
 
   backend "s3" {
-    bucket = "echo-core-terraform-state"
+    bucket = "terraform-state"
     key    = "stacks/auth0-app-dashboard/terraform.tfstate"
     region = "auto"
 
@@ -35,7 +35,7 @@ data "doppler_secrets" "this" {}
 # Auth0 provider - credentials from Doppler
 provider "auth0" {
   domain        = data.doppler_secrets.this.map.AUTH0_DOMAIN
-  client_id     = data.doppler_secrets.this.map.AUTH0_TF_CLIENT_ID
-  client_secret = data.doppler_secrets.this.map.AUTH0_TF_CLIENT_SECRET
-  audience      = data.doppler_secrets.this.map.AUTH0_TF_AUDIENCE
+  client_id     = data.doppler_secrets.this.map.AUTH0_CLIENT_ID
+  client_secret = data.doppler_secrets.this.map.AUTH0_CLIENT_SECRET
+  audience      = data.doppler_secrets.this.map.AUTH0_AUDIENCE
 }

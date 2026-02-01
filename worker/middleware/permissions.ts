@@ -5,12 +5,6 @@ import { AuthUser } from './auth';
 // Scope Constants
 // =============================================================================
 
-// Legacy scopes (kept for backward compatibility)
-export const LEGACY_PERMISSIONS = {
-	READ: 'hub:read',
-	EDIT: 'hub:edit',
-} as const;
-
 // Document scopes
 export const DOCS_PERMISSIONS = {
 	READ: 'docs:read',
@@ -75,33 +69,21 @@ export function hasAnyPermission(
 // =============================================================================
 
 export function canReadDocs(permissions: string[] | undefined): boolean {
-	return hasAnyPermission(permissions, [
-		DOCS_PERMISSIONS.READ,
-		LEGACY_PERMISSIONS.READ,
-	]);
+	return hasAnyPermission(permissions, [DOCS_PERMISSIONS.READ]);
 }
 
 export function canReadUnpublishedDocs(
 	permissions: string[] | undefined
 ): boolean {
-	return hasAnyPermission(permissions, [
-		DOCS_PERMISSIONS.READ_UNPUBLISHED,
-		LEGACY_PERMISSIONS.EDIT,
-	]);
+	return hasAnyPermission(permissions, [DOCS_PERMISSIONS.READ_UNPUBLISHED]);
 }
 
 export function canEditDocs(permissions: string[] | undefined): boolean {
-	return hasAnyPermission(permissions, [
-		DOCS_PERMISSIONS.EDIT,
-		LEGACY_PERMISSIONS.EDIT,
-	]);
+	return hasAnyPermission(permissions, [DOCS_PERMISSIONS.EDIT]);
 }
 
 export function canDeleteDocs(permissions: string[] | undefined): boolean {
-	return hasAnyPermission(permissions, [
-		DOCS_PERMISSIONS.DELETE,
-		LEGACY_PERMISSIONS.EDIT,
-	]);
+	return hasAnyPermission(permissions, [DOCS_PERMISSIONS.DELETE]);
 }
 
 // =============================================================================
@@ -109,24 +91,15 @@ export function canDeleteDocs(permissions: string[] | undefined): boolean {
 // =============================================================================
 
 export function canReadLinks(permissions: string[] | undefined): boolean {
-	return hasAnyPermission(permissions, [
-		LINKS_PERMISSIONS.READ,
-		LEGACY_PERMISSIONS.READ,
-	]);
+	return hasAnyPermission(permissions, [LINKS_PERMISSIONS.READ]);
 }
 
 export function canEditLinks(permissions: string[] | undefined): boolean {
-	return hasAnyPermission(permissions, [
-		LINKS_PERMISSIONS.EDIT,
-		LEGACY_PERMISSIONS.EDIT,
-	]);
+	return hasAnyPermission(permissions, [LINKS_PERMISSIONS.EDIT]);
 }
 
 export function canDeleteLinks(permissions: string[] | undefined): boolean {
-	return hasAnyPermission(permissions, [
-		LINKS_PERMISSIONS.DELETE,
-		LEGACY_PERMISSIONS.EDIT,
-	]);
+	return hasAnyPermission(permissions, [LINKS_PERMISSIONS.DELETE]);
 }
 
 // =============================================================================
@@ -134,26 +107,17 @@ export function canDeleteLinks(permissions: string[] | undefined): boolean {
 // =============================================================================
 
 export function canReadCategories(permissions: string[] | undefined): boolean {
-	return hasAnyPermission(permissions, [
-		CATEGORIES_PERMISSIONS.READ,
-		LEGACY_PERMISSIONS.READ,
-	]);
+	return hasAnyPermission(permissions, [CATEGORIES_PERMISSIONS.READ]);
 }
 
 export function canEditCategories(permissions: string[] | undefined): boolean {
-	return hasAnyPermission(permissions, [
-		CATEGORIES_PERMISSIONS.EDIT,
-		LEGACY_PERMISSIONS.EDIT,
-	]);
+	return hasAnyPermission(permissions, [CATEGORIES_PERMISSIONS.EDIT]);
 }
 
 export function canDeleteCategories(
 	permissions: string[] | undefined
 ): boolean {
-	return hasAnyPermission(permissions, [
-		CATEGORIES_PERMISSIONS.DELETE,
-		LEGACY_PERMISSIONS.EDIT,
-	]);
+	return hasAnyPermission(permissions, [CATEGORIES_PERMISSIONS.DELETE]);
 }
 
 // =============================================================================
@@ -161,28 +125,19 @@ export function canDeleteCategories(
 // =============================================================================
 
 export function canReadAttachments(permissions: string[] | undefined): boolean {
-	return hasAnyPermission(permissions, [
-		ATTACHMENTS_PERMISSIONS.READ,
-		LEGACY_PERMISSIONS.READ,
-	]);
+	return hasAnyPermission(permissions, [ATTACHMENTS_PERMISSIONS.READ]);
 }
 
 export function canUploadAttachments(
 	permissions: string[] | undefined
 ): boolean {
-	return hasAnyPermission(permissions, [
-		ATTACHMENTS_PERMISSIONS.UPLOAD,
-		LEGACY_PERMISSIONS.EDIT,
-	]);
+	return hasAnyPermission(permissions, [ATTACHMENTS_PERMISSIONS.UPLOAD]);
 }
 
 export function canDeleteAttachments(
 	permissions: string[] | undefined
 ): boolean {
-	return hasAnyPermission(permissions, [
-		ATTACHMENTS_PERMISSIONS.DELETE,
-		LEGACY_PERMISSIONS.EDIT,
-	]);
+	return hasAnyPermission(permissions, [ATTACHMENTS_PERMISSIONS.DELETE]);
 }
 
 // =============================================================================
@@ -190,29 +145,11 @@ export function canDeleteAttachments(
 // =============================================================================
 
 export function canReadPrefs(permissions: string[] | undefined): boolean {
-	return hasAnyPermission(permissions, [
-		PREFS_PERMISSIONS.READ,
-		LEGACY_PERMISSIONS.READ,
-	]);
+	return hasAnyPermission(permissions, [PREFS_PERMISSIONS.READ]);
 }
 
 export function canEditPrefs(permissions: string[] | undefined): boolean {
-	return hasAnyPermission(permissions, [
-		PREFS_PERMISSIONS.EDIT,
-		LEGACY_PERMISSIONS.READ, // Note: users with hub:read can edit their own prefs
-	]);
-}
-
-// =============================================================================
-// Legacy Permission Helpers (for backward compatibility)
-// =============================================================================
-
-export function hasReadPermission(permissions: string[] | undefined): boolean {
-	return hasPermission(permissions, LEGACY_PERMISSIONS.READ);
-}
-
-export function hasAdminPermission(permissions: string[] | undefined): boolean {
-	return hasPermission(permissions, LEGACY_PERMISSIONS.EDIT);
+	return hasAnyPermission(permissions, [PREFS_PERMISSIONS.EDIT]);
 }
 
 // =============================================================================
@@ -327,67 +264,3 @@ export const prefsEditMiddleware = createPermissionMiddleware(
 	canEditPrefs,
 	'Preferences edit access required'
 );
-
-// =============================================================================
-// Hub Permissions Aggregator (for /api/auth/me response)
-// =============================================================================
-
-export interface HubPermissions {
-	docs: {
-		canRead: boolean;
-		canReadUnpublished: boolean;
-		canEdit: boolean;
-		canDelete: boolean;
-	};
-	links: {
-		canRead: boolean;
-		canEdit: boolean;
-		canDelete: boolean;
-	};
-	categories: {
-		canRead: boolean;
-		canEdit: boolean;
-		canDelete: boolean;
-	};
-	attachments: {
-		canRead: boolean;
-		canUpload: boolean;
-		canDelete: boolean;
-	};
-	prefs: {
-		canRead: boolean;
-		canEdit: boolean;
-	};
-}
-
-export function getHubPermissions(
-	permissions: string[] | undefined
-): HubPermissions {
-	return {
-		docs: {
-			canRead: canReadDocs(permissions),
-			canReadUnpublished: canReadUnpublishedDocs(permissions),
-			canEdit: canEditDocs(permissions),
-			canDelete: canDeleteDocs(permissions),
-		},
-		links: {
-			canRead: canReadLinks(permissions),
-			canEdit: canEditLinks(permissions),
-			canDelete: canDeleteLinks(permissions),
-		},
-		categories: {
-			canRead: canReadCategories(permissions),
-			canEdit: canEditCategories(permissions),
-			canDelete: canDeleteCategories(permissions),
-		},
-		attachments: {
-			canRead: canReadAttachments(permissions),
-			canUpload: canUploadAttachments(permissions),
-			canDelete: canDeleteAttachments(permissions),
-		},
-		prefs: {
-			canRead: canReadPrefs(permissions),
-			canEdit: canEditPrefs(permissions),
-		},
-	};
-}

@@ -1,67 +1,74 @@
-import { useAuth0 } from "@auth0/auth0-react";
-import { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { useAuth0 } from '@auth0/auth0-react';
+import { useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Loader2 } from 'lucide-react';
 
 export function LoginPage() {
-  const { loginWithRedirect, isAuthenticated, isLoading, error } = useAuth0();
-  const location = useLocation();
-  const navigate = useNavigate();
+	const { loginWithRedirect, isAuthenticated, isLoading, error } = useAuth0();
+	const location = useLocation();
+	const navigate = useNavigate();
 
-  const returnTo = (location.state as { returnTo?: string })?.returnTo || "/";
+	const returnTo = (location.state as { returnTo?: string })?.returnTo || '/';
 
-  console.log("[LoginPage] State:", { isAuthenticated, isLoading, error, returnTo });
+	console.log('[LoginPage] State:', {
+		isAuthenticated,
+		isLoading,
+		error,
+		returnTo,
+	});
 
-  useEffect(() => {
-    if (error) {
-      console.error("[LoginPage] Auth0 error:", error);
-    }
-    if (isAuthenticated && !isLoading) {
-      console.log("[LoginPage] Authenticated, navigating to:", returnTo);
-      navigate(returnTo);
-    }
-  }, [isAuthenticated, isLoading, navigate, returnTo, error]);
+	useEffect(() => {
+		if (error) {
+			console.error('[LoginPage] Auth0 error:', error);
+		}
+		if (isAuthenticated && !isLoading) {
+			console.log('[LoginPage] Authenticated, navigating to:', returnTo);
+			navigate(returnTo);
+		}
+	}, [isAuthenticated, isLoading, navigate, returnTo, error]);
 
-  const handleLogin = () => {
-    console.log("[LoginPage] Initiating login redirect...");
-    loginWithRedirect({
-      appState: { returnTo },
-    });
-  };
+	const handleLogin = () => {
+		console.log('[LoginPage] Initiating login redirect...');
+		loginWithRedirect({
+			appState: { returnTo },
+		});
+	};
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-muted">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
+	if (isLoading) {
+		return (
+			<div className='from-background to-muted flex min-h-screen items-center justify-center bg-gradient-to-br'>
+				<Loader2 className='text-muted-foreground h-8 w-8 animate-spin' />
+			</div>
+		);
+	}
 
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-muted p-4">
-      <Card className="w-full max-w-md">
-        <CardContent className="pt-8 pb-8">
-          <div className="flex flex-col items-center gap-8">
-            <div className="text-center space-y-2">
-              <div className="mx-auto w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-                <span className="text-3xl font-bold text-primary">U</span>
-              </div>
-              <h1 className="text-2xl font-bold tracking-tight">Welcome to The Hub</h1>
-              <p className="text-muted-foreground text-sm">
-                Sign in to access Unstable Studios resources
-              </p>
-            </div>
-            <Button size="lg" className="w-full" onClick={handleLogin}>
-              Continue with Auth0
-            </Button>
-            <p className="text-xs text-muted-foreground text-center">
-              Internal use only. Requires organization membership.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
+	return (
+		<div className='from-background to-muted flex min-h-screen items-center justify-center bg-gradient-to-br p-4'>
+			<Card className='w-full max-w-md'>
+				<CardContent className='pt-8 pb-8'>
+					<div className='flex flex-col items-center gap-8'>
+						<div className='space-y-2 text-center'>
+							<div className='bg-primary/10 mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl'>
+								<span className='text-primary text-3xl font-bold'>U</span>
+							</div>
+							<h1 className='text-2xl font-bold tracking-tight'>
+								Welcome to the Dashboard
+							</h1>
+							<p className='text-muted-foreground text-sm'>
+								Sign in to access Unstable Studios resources
+							</p>
+						</div>
+						<Button size='lg' className='w-full' onClick={handleLogin}>
+							Continue with Auth0
+						</Button>
+						<p className='text-muted-foreground text-center text-xs'>
+							Internal use only. Requires organization membership.
+						</p>
+					</div>
+				</CardContent>
+			</Card>
+		</div>
+	);
 }
