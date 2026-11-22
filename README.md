@@ -93,6 +93,13 @@ pnpm build
 pnpm deploy
 ```
 
+## Claude Code
+
+`.mcp.json` adds Cloudflare's API MCP server (`https://mcp.cloudflare.com/mcp`) for this
+repo. It authenticates with a read-only Cloudflare API token supplied by a `cf-mcp-headers`
+command on your `PATH`, which prints `{"Authorization": "Bearer <token>"}`. Without that
+command the server can't connect; decline it when Claude Code asks to approve it.
+
 ## License
 
 AGPL-3.0 - See [LICENSE](LICENSE) for details.
