@@ -93,6 +93,14 @@ pnpm build
 pnpm deploy
 ```
 
+## Claude Code
+
+`.mcp.json` adds Cloudflare's API MCP server (`https://mcp.cloudflare.com/mcp`) for this
+repo, authenticated with a read-only Cloudflare API token. `~/.local/bin/cf-mcp-headers`
+supplies it as `{"Authorization": "Bearer <token>"}`. Without that command the server gets
+the placeholder `Bearer missing` and fails to connect. Don't sign in to it with OAuth from
+`/mcp`: an OAuth grant can include write access.
+
 ## License
 
 AGPL-3.0 - See [LICENSE](LICENSE) for details.
